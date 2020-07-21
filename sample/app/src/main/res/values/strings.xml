@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">DJI UX Sample</string>
+    <string name="app_name">SpeechFlying</string>
     <string name="select_all">Select All</string>
     <string name="select_none">Select None</string>
     <string name="search">Search</string>
@@ -62,4 +62,6 @@
     </string-array>
 
     <string name="mapbox_id">Please enter the map box key here.</string>
+    <string name="app_id">5f0f15d5</string>     <!-- 讯飞语音的离线命令词识别-->
+
 </resources>
