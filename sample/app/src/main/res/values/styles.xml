@@ -14,4 +14,11 @@
         <item name="android:textColorSecondary">@color/blue</item>
         <item name="android:windowFullscreen">true</item>
     </style>
+
+    <!-- 更改switch字体大小 -->
+    <style name="My.TextAppearance" parent="@style/TextAppearance.AppCompat.Widget.Switch">
+         <item name="android:textSize">12dp</item>
+         <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textStyle">bold</item>>
+    </style>
 </resources>

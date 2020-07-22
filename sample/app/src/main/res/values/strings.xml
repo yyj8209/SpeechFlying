@@ -43,6 +43,8 @@
     <string name="dji_account_indicator">DJI Account Login Indicator</string>
     <string name="new_color">New Color</string>
     <string name="sync">Sync</string>
+    <string name="speech_fly">语音控制</string>
+    <string name="remote_fly">遥控飞行</string>
     <string-array name="iconArray">
         <item>Aircraft</item>
         <item>Home</item>

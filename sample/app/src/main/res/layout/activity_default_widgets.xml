@@ -85,6 +85,7 @@
         android:layout_below="@+id/signal"
         android:layout_marginTop="15dp"
         android:background="@color/dark_gray"
+        android:visibility="gone"
         android:orientation="horizontal">
 
         <dji.ux.widget.config.CameraConfigISOAndEIWidget
@@ -122,6 +123,7 @@
         android:layout_below="@id/camera"
         android:layout_toLeftOf="@+id/CameraCapturePanel"
         android:background="@color/dark_gray"
+        android:visibility="gone"
         android:orientation="horizontal">
         <dji.ux.widget.SpeakerWidget
             android:layout_width="35dp"
@@ -148,7 +150,7 @@
     <dji.ux.widget.ManualFocusWidget
         android:layout_alignTop="@+id/camera2"
         android:layout_toLeftOf="@+id/camera2"
-
+        android:visibility="gone"
         android:layout_width="50dp"
         android:layout_height="210dp"
         tools:ignore="RtlHardcoded"/>
@@ -164,14 +166,22 @@
 
     <!-- Everything below this line will appear on top of the full-screen map widget -->
 
-    <dji.ux.widget.controls.CameraControlsWidget
-        android:id="@+id/CameraCapturePanel"
+    <Switch
+        android:id="@+id/fly_method"
+        android:layout_width="wrap_content"
+        android:layout_height="37dp"
         android:layout_alignParentRight="true"
         android:layout_below="@id/camera"
-        android:layout_width="50dp"
-        android:layout_height="213dp"
-        android:layout_marginTop="5dp"
-        tools:ignore="RtlHardcoded"/>
+        android:layout_marginTop="20dp"
+        android:paddingRight="10dp"
+        android:splitTrack="false"
+        android:switchMinWidth="20dp"
+        android:switchTextAppearance="@style/My.TextAppearance"
+        android:textOff="@string/speech_fly"
+        android:textOn="@string/remote_fly"
+        android:thumb="@drawable/bg_login_button_press"
+        android:track="@android:drawable/button_onoff_indicator_on"
+        tools:checked="false" />
 
     <!-- Widgets in top status bar -->
     <LinearLayout
@@ -244,20 +254,20 @@
         android:layout_width="40dp"
         android:layout_height="wrap_content"
         android:layout_marginLeft="12dp"
-        android:layout_marginBottom="4dp"
+        android:layout_marginBottom="20dp"
         android:layout_above="@+id/dashboard_widget"
         android:orientation="vertical">
 
         <dji.ux.widget.TakeOffWidget
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginBottom="5dp" />
+            android:layout_marginBottom="10dp" />
 
         <dji.ux.widget.ReturnHomeWidget
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_marginTop="5dp"
-            android:layout_marginBottom="5dp"/>
+            android:layout_marginBottom="10dp"/>
     </LinearLayout>
 
     <!-- Panels -->
