@@ -1,7 +1,9 @@
-package com.iflytek.speech.util;
+package com.dji.sdk.sample.demo.util;
+
+import android.content.Context;
+
 import java.io.IOException;
 import java.io.InputStream;
-import android.content.Context;
 
 /**
  * 功能性函数扩展类

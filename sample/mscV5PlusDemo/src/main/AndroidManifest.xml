@@ -11,7 +11,7 @@
         android:label="讯飞语音示例v5+"
          >
         <activity
-            android:name="com.iflytek.mscv5plusdemo.ArsActivity"
+            android:name="com.iflytek.mscv5plusdemo.MainActivity"
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|fontScale"
             android:icon="@drawable/icon"
             android:label="讯飞语音示例v5+"

@@ -7,7 +7,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
+import androidx.core.app.ActivityCompat;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -18,10 +19,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
-
-
-
-public class ArsActivity extends Activity implements OnClickListener{
+public class MainActivity extends Activity implements OnClickListener{
 
 	private Toast mToast;
 	@SuppressLint("ShowToast")
@@ -77,23 +75,17 @@ public class ArsActivity extends Activity implements OnClickListener{
 
 
 	//Menu 列表
-	String items[] = {"立刻体验语音听写",
-			"立刻体验语法识别",
-			"立刻体验语义理解",
-			"立刻体验语音合成",
-			"立即体验增强版语音合成",
-			"立刻体验语音唤醒",
-			"立刻体验声纹密码"};
+	String items[] = {"立刻体验语音听写","立刻体验语法识别","立刻体验语义理解","立刻体验语音合成","立即体验增强版语音合成","立刻体验语音唤醒","立刻体验声纹密码"};
 	private class SimpleAdapter extends BaseAdapter{
 		public View getView(int position, View convertView, ViewGroup parent) 
 		{	   		  
 			if(null == convertView){
-				LayoutInflater factory = LayoutInflater.from(ArsActivity.this);
+				LayoutInflater factory = LayoutInflater.from(MainActivity.this);
 				View mView = factory.inflate(R.layout.list_items, null);
 				convertView = mView;
 			}
 			Button btn = (Button)convertView.findViewById(R.id.btn);
-			btn.setOnClickListener(ArsActivity.this);
+			btn.setOnClickListener(MainActivity.this);
 			btn.setTag(position);
 			btn.setText(items[position]);
 			return convertView;

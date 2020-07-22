@@ -59,7 +59,7 @@
         <!-- AMaps -->
         <meta-data
             android:name="com.amap.api.v2.apikey"
-            android:value="	2c20a291186f3e8a7a879e2f1009e31a"/>
+            android:value="2c20a291186f3e8a7a879e2f1009e31a"/>
 
         <activity
             android:name=".MainActivity"
