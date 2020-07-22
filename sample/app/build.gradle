@@ -106,5 +106,5 @@ dependencies {
 
     //HERE maps
 //    implementation files('libs/HERE-sdk-3.15.0.aar')
-
+    compile files('libs/Msc.jar')
 }
