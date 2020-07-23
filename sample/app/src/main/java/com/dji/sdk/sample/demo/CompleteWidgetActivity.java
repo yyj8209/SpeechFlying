@@ -15,8 +15,16 @@ import androidx.annotation.NonNull;
 import com.dji.mapkit.core.maps.DJIMap;
 import com.dji.mapkit.core.models.DJILatLng;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
+import dji.common.error.DJIError;
+import dji.common.flightcontroller.virtualstick.FlightControlData;
+import dji.common.util.CommonCallbacks;
 import dji.keysdk.CameraKey;
 import dji.keysdk.KeyManager;
+import dji.sdk.flightcontroller.FlightController;
+import dji.sdk.products.Aircraft;
 import dji.ux.widget.FPVWidget;
 import dji.ux.widget.MapWidget;
 import dji.ux.widget.controls.CameraControlsWidget;
@@ -39,6 +47,15 @@ public class CompleteWidgetActivity extends Activity {
     private int margin;
     private int deviceWidth;
     private int deviceHeight;
+//  Virtual Stick 部分
+    private FlightController mFlightController;
+    private Timer mSendVirtualStickDataTimer;
+    private SendVirtualStickDataTask mSendVirtualStickDataTask;
+
+    private float mPitch;
+    private float mRoll;
+    private float mYaw;
+    private float mThrottle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -183,6 +200,7 @@ public class CompleteWidgetActivity extends Activity {
                 | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
 
         mapWidget.onResume();
+        initFlightController();
     }
 
     @Override
@@ -239,6 +257,38 @@ public class CompleteWidgetActivity extends Activity {
             p.rightMargin = mMargin;
             p.bottomMargin = mMargin;
             mView.requestLayout();
+        }
+    }
+
+// Virtual stick 部分
+    private void initFlightController() {
+
+        Aircraft aircraft = MApplication.getAircraftInstance();
+        if (aircraft == null || !aircraft.isConnected()) {
+            mFlightController = null;
+            return;
+        } else {
+            mFlightController = aircraft.getFlightController();
+        }
+    }
+
+    class SendVirtualStickDataTask extends TimerTask {
+
+        @Override
+        public void run() {
+
+            if (mFlightController != null) {
+                mFlightController.sendVirtualStickFlightControlData(
+                        new FlightControlData(
+                                mPitch, mRoll, mYaw, mThrottle
+                        ), new CommonCallbacks.CompletionCallback() {
+                            @Override
+                            public void onResult(DJIError djiError) {
+
+                            }
+                        }
+                );
+            }
         }
     }
 }
