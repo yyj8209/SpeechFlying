@@ -31,6 +31,8 @@ public class MApplication extends Application {
         StringBuffer param = new StringBuffer();
         param.append("appid="+getString(R.string.app_id));
         param.append(",");
+        param.append(SpeechConstant.FORCE_LOGIN+"=true");
+        param.append(",");
         // 设置使用v5+
         param.append(SpeechConstant.ENGINE_MODE+"="+SpeechConstant.MODE_MSC);
         SpeechUtility.createUtility(MApplication.this, param.toString());
