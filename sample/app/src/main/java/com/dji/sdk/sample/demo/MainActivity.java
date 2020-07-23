@@ -28,6 +28,8 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.iflytek.cloud.SpeechConstant;
+import com.iflytek.cloud.SpeechUtility;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -95,10 +97,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Popu
 
         }
 
-//        @Override
-//        public void onDatabaseDownloadProgress(long current, long total) {
-//
-//        }
+        @Override
+        public void onDatabaseDownloadProgress(long current, long total) {
+
+        }
     };
 
     private void loginAccount(){
@@ -146,7 +148,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Popu
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        SpeechUtility.createUtility(context, SpeechConstant.APPID +"=5f0f15d5");
+        SpeechUtility.createUtility(MainActivity.this, SpeechConstant.APPID +"=5f0f15d5");
         isAppStarted = true;
         findViewById(R.id.complete_ui_widgets).setOnClickListener(this);
         findViewById(R.id.bt_customized_ui_widgets).setOnClickListener(this);

@@ -29,9 +29,9 @@ import com.iflytek.cloud.util.ContactManager;
 import com.iflytek.cloud.util.ContactManager.ContactListener;
 import com.iflytek.cloud.util.ResourceUtil;
 import com.iflytek.cloud.util.ResourceUtil.RESOURCE_TYPE;
-import com.iflytek.speech.util.FucUtil;
-import com.iflytek.speech.util.JsonParser;
-import com.iflytek.speech.util.XmlParser;
+import com.dji.sdk.sample.demo.util.FucUtil;
+import com.dji.sdk.sample.demo.util.JsonParser;
+import com.dji.sdk.sample.demo.util.XmlParser;
 
 public class AsrDemo extends Activity implements OnClickListener{
 	private final static String TAG = AsrDemo.class.getSimpleName();
