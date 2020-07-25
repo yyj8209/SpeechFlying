@@ -3,12 +3,16 @@ package com.dji.sdk.sample.demo;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
+import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
+import android.widget.Switch;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -20,11 +24,17 @@ import java.util.TimerTask;
 
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.virtualstick.FlightControlData;
+import dji.common.flightcontroller.virtualstick.FlightCoordinateSystem;
+import dji.common.flightcontroller.virtualstick.Limits;
+import dji.common.flightcontroller.virtualstick.RollPitchControlMode;
+import dji.common.flightcontroller.virtualstick.VerticalControlMode;
+import dji.common.flightcontroller.virtualstick.YawControlMode;
 import dji.common.util.CommonCallbacks;
 import dji.keysdk.CameraKey;
 import dji.keysdk.KeyManager;
 import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.products.Aircraft;
+import dji.ux.internal.SwitchButton;
 import dji.ux.widget.FPVWidget;
 import dji.ux.widget.MapWidget;
 import dji.ux.widget.controls.CameraControlsWidget;
@@ -33,6 +43,8 @@ import dji.ux.widget.controls.CameraControlsWidget;
  * Activity that shows all the UI elements together
  */
 public class CompleteWidgetActivity extends Activity {
+
+    private static final String TAG = "CompleteWidgetActivity";
 
     private MapWidget mapWidget;
     private ViewGroup parentView;
@@ -47,15 +59,8 @@ public class CompleteWidgetActivity extends Activity {
     private int margin;
     private int deviceWidth;
     private int deviceHeight;
-//  Virtual Stick 部分
-    private FlightController mFlightController;
-    private Timer mSendVirtualStickDataTimer;
-    private SendVirtualStickDataTask mSendVirtualStickDataTask;
 
-    private float mPitch;
-    private float mRoll;
-    private float mYaw;
-    private float mThrottle;
+    private FlightController mFlightController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,6 +108,18 @@ public class CompleteWidgetActivity extends Activity {
             }
         });
         updateSecondaryVideoVisibility();
+
+        // 语音控制部分的初始化
+        switchFlyMethod = (Switch)findViewById(R.id.fly_method);
+        switchFlyMethod.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked)
+                    enableSpeechFlying();
+                else
+                    disableSpeechFlying();
+            }
+        });
     }
 
     private void onViewClick(View view) {
@@ -212,6 +229,16 @@ public class CompleteWidgetActivity extends Activity {
     @Override
     protected void onDestroy() {
         mapWidget.onDestroy();
+
+        disableSpeechFlying();
+        if (mSendVirtualStickDataTask != null) {
+            mSendVirtualStickDataTask.cancel();
+        }
+        mSendVirtualStickDataTimer.cancel();
+        mSendVirtualStickDataTimer.purge();
+        mSendVirtualStickDataTimer = null;
+        mSendVirtualStickDataTask = null;
+
         super.onDestroy();
     }
 
@@ -261,6 +288,18 @@ public class CompleteWidgetActivity extends Activity {
     }
 
 // Virtual stick 部分
+    private boolean isEnableStick = false;
+    private FlightControlData mSendData;
+    //  Virtual Stick 部分
+    private Switch switchFlyMethod;
+    private Timer mSendVirtualStickDataTimer;
+    private SendVirtualStickDataTask mSendVirtualStickDataTask;
+
+    private float mPitch;
+    private float mRoll;
+    private float mYaw;
+    private float mThrottle;
+
     private void initFlightController() {
 
         Aircraft aircraft = MApplication.getAircraftInstance();
@@ -272,16 +311,55 @@ public class CompleteWidgetActivity extends Activity {
         }
     }
 
+    private void enableSpeechFlying(){
+        if(mFlightController == null){
+            Toast.makeText(getApplicationContext(), "飞机未连接", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        mFlightController.setVirtualStickModeEnabled(true, new CommonCallbacks.CompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+                if (null == djiError) {
+//                    isEnableStick = true;
+                    Log.d("debug", "setVirtualStickModeEnabled success，准备接受Virtual Stick控制");
+                    mFlightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
+                    mFlightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
+                    mFlightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
+                    mFlightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
+                    isEnableStick = true;
+                } else {
+                    Log.d("debug",  "error = " + djiError.getDescription());
+                }
+//————————————————
+//                版权声明：本文为CSDN博主「风之子磊505057618」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+//                原文链接：https://blog.csdn.net/qq_26923265/article/details/82743941
+            }
+        });
+    }
+
+    private void disableSpeechFlying(){
+        if(mFlightController == null){
+            Toast.makeText(getApplicationContext(), "飞机未连接", Toast.LENGTH_LONG).show();
+            return;
+        }
+        mFlightController.setVirtualStickModeEnabled(false, new CommonCallbacks.CompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+                Log.d("debug", "setVirtualStickModeDisabled success， 回到遥控器控制");
+                isEnableStick = false;
+            }
+        });
+    }
+
     class SendVirtualStickDataTask extends TimerTask {
 
         @Override
         public void run() {
 
             if (mFlightController != null) {
-                mFlightController.sendVirtualStickFlightControlData(
-                        new FlightControlData(
-                                mPitch, mRoll, mYaw, mThrottle
-                        ), new CommonCallbacks.CompletionCallback() {
+                mFlightController.sendVirtualStickFlightControlData(mSendData,
+                        new CommonCallbacks.CompletionCallback() {
                             @Override
                             public void onResult(DJIError djiError) {
 
@@ -291,4 +369,93 @@ public class CompleteWidgetActivity extends Activity {
             }
         }
     }
+
+    class VirtualStickPB{
+        float rockerX;
+        float rockerY;
+        float rockerZ;
+        float rockerRotation;
+        public VirtualStickPB(float rockerX, float rockerY, float rockerZ, float rockerRotation){
+            this.rockerX = rockerX;
+            this.rockerY = rockerY;
+            this.rockerZ = rockerZ;
+            this.rockerRotation = rockerRotation;
+
+        }
+    }
+    /**
+     *  rockerX 杆量比[-1, 1], 前/后(+/-)
+     *  rockerY 杆量比[-1, 1], 左/右(-/+)
+     *  rockerZ 杆量比[-1, 1], 上/下(-/+)
+     *  rockerRotate 杆量比[-1, 1], 顺时针/逆时针(+/-)旋转
+     */
+
+    private void fly(VirtualStickPB bean) {
+        if(mFlightController == null){
+            Toast.makeText(getApplicationContext(), "飞机未连接", Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (isEnableStick) {
+            float rockX =  bean.rockerX;
+            float rockY =  bean.rockerY;
+            float rockZ =  bean.rockerZ;
+            float rockerRotation =  bean.rockerRotation;
+            //Log.e("dispatch", "x = " + rockX + "   y = " + rockY + "  z = " + rockZ+"  rockerRotation = "+rockerRotation);
+
+            RollPitchControlMode rollPitchControlMode = mFlightController.getRollPitchControlMode();
+            VerticalControlMode verticalControlMode = mFlightController.getVerticalControlMode();
+            YawControlMode yawControlMode = mFlightController.getYawControlMode();
+
+            if (rollPitchControlMode == RollPitchControlMode.VELOCITY) {
+                // 前/后
+                mRoll = rockX * Limits.ROLL_PITCH_CONTROL_MAX_VELOCITY;
+                // 左/右
+                mPitch = rockY * Limits.ROLL_PITCH_CONTROL_MAX_VELOCITY;
+            } else if (rollPitchControlMode == RollPitchControlMode.ANGLE) {
+                // 前/后
+                mPitch = -rockX * Limits.ROLL_PITCH_CONTROL_MAX_ANGLE;
+                // 左/右
+                mRoll = rockY * Limits.ROLL_PITCH_CONTROL_MAX_ANGLE;
+            } else {
+                mPitch = 0;
+                mRoll = 0;
+            }
+
+            if (verticalControlMode == VerticalControlMode.VELOCITY) {
+                // 上/下
+                mThrottle = -rockZ * Limits.VERTICAL_CONTROL_MAX_VELOCITY;
+            } else if (verticalControlMode == VerticalControlMode.POSITION) {
+                // 上/下
+                if (rockZ >= 0) {
+                    mThrottle = rockZ * Limits.VERTICAL_CONTROL_MAX_HEIGHT;
+                } else {
+                    mThrottle = 0;
+                    //mThrottle = controller.getCurrentState().getAircraftLocation().getAltitude();
+                }
+            } else {
+                mThrottle = 0;
+            }
+
+            if (yawControlMode == YawControlMode.ANGULAR_VELOCITY) {
+                // 旋转
+                mYaw = rockerRotation * Limits.YAW_CONTROL_MAX_ANGULAR_VELOCITY;
+            } else if (yawControlMode == YawControlMode.ANGLE) {
+                // 旋转
+                mYaw = rockerRotation * Limits.YAW_CONTROL_MAX_ANGLE;
+            } else {
+                mYaw = 0;
+            }
+
+            mSendData = new FlightControlData(mPitch, mRoll, mYaw, mThrottle);
+
+            if (null == mSendVirtualStickDataTimer) {
+                mSendVirtualStickDataTask = new SendVirtualStickDataTask();
+                mSendVirtualStickDataTimer = new Timer();
+                mSendVirtualStickDataTimer.schedule(mSendVirtualStickDataTask, 100, 200);
+            }
+        } else {
+            Log.d("debug", "isenablestick = false");
+        }
+    }
+
 }

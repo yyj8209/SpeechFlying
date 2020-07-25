@@ -177,8 +177,8 @@
         android:splitTrack="false"
         android:switchMinWidth="20dp"
         android:switchTextAppearance="@style/My.TextAppearance"
-        android:textOff="@string/speech_fly"
-        android:textOn="@string/remote_fly"
+        android:textOff="@string/remote_fly"
+        android:textOn="@string/speech_fly"
         android:thumb="@drawable/bg_login_button_press"
         android:track="@android:drawable/button_onoff_indicator_on"
         tools:checked="false" />
@@ -276,25 +276,26 @@
         android:layout_centerVertical="true"
         android:layout_width="150dp"
         android:layout_height="75dp"
+        android:visibility="gone"
         tools:ignore="RtlHardcoded"/>
 
     <dji.ux.panel.CameraSettingExposurePanel
         android:layout_width="180dp"
         android:layout_below="@id/camera"
-        android:layout_toLeftOf="@+id/CameraCapturePanel"
         android:gravity="center"
         android:layout_height="263dp"
         android:visibility="gone"
         tools:ignore="RtlHardcoded"/>
+<!--    android:layout_toLeftOf="@+id/CameraCapturePanel"-->
 
     <dji.ux.panel.CameraSettingAdvancedPanel
         android:layout_width="180dp"
         android:layout_height="263dp"
         android:layout_below="@id/camera"
-        android:layout_toLeftOf="@+id/CameraCapturePanel"
         android:gravity="center"
         android:visibility="gone"
         tools:ignore="RtlHardcoded"/>
+<!--    android:layout_toLeftOf="@+id/CameraCapturePanel"-->
 
     <dji.ux.panel.RTKStatusPanel
         android:id="@+id/rtk_panel"
