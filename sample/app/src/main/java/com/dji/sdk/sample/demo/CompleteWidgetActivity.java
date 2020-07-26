@@ -1,7 +1,11 @@
 package com.dji.sdk.sample.demo;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Environment;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -18,6 +22,18 @@ import androidx.annotation.NonNull;
 
 import com.dji.mapkit.core.maps.DJIMap;
 import com.dji.mapkit.core.models.DJILatLng;
+import com.dji.sdk.sample.demo.util.FucUtil;
+import com.dji.sdk.sample.demo.util.JsonParser;
+import com.dji.sdk.sample.demo.util.XmlParser;
+import com.iflytek.cloud.ErrorCode;
+import com.iflytek.cloud.InitListener;
+import com.iflytek.cloud.SpeechConstant;
+import com.iflytek.cloud.SpeechError;
+import com.iflytek.cloud.SpeechRecognizer;
+import com.iflytek.cloud.util.ResourceUtil;
+import com.iflytek.speech.GrammarListener;
+import com.iflytek.speech.RecognizerListener;
+import com.iflytek.speech.RecognizerResult;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -61,8 +77,21 @@ public class CompleteWidgetActivity extends Activity {
     private int deviceWidth;
     private int deviceHeight;
 
+    // 虚拟遥杆飞行部分
     private FlightController mFlightController;
 
+    // 语音识别部分
+    private SpeechRecognizer mAsr;
+    private Toast mToast;
+    private String mLocalGrammar = null;    // 本地语法文件
+    // 本地语法构建路径
+    private String grmPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/msc/test";
+    private String mResultType = "json";    // 返回结果格式，支持：xml,json
+//    private  final String GRAMMAR_TYPE_ABNF = "abnf";
+    private  final String GRAMMAR_TYPE_BNF = "bnf";
+    private String mEngineType;
+
+    @SuppressLint("ShowToast")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -111,6 +140,8 @@ public class CompleteWidgetActivity extends Activity {
         updateSecondaryVideoVisibility();
 
         // 语音控制部分的初始化
+        mToast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
+        initSpeechEngine();
         switchFlyMethod = (Switch)findViewById(R.id.fly_method);
         switchFlyMethod.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -229,8 +260,14 @@ public class CompleteWidgetActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        // 释放地图
         mapWidget.onDestroy();
-
+        // 释放语音引擎
+        if( null != mAsr ){
+            mAsr.cancel();
+            mAsr.destroy();
+        }
+        // 释放飞行控制权
         disableSpeechFlying();
         if (mSendVirtualStickDataTask != null) {
             mSendVirtualStickDataTask.cancel();
@@ -462,6 +499,215 @@ public class CompleteWidgetActivity extends Activity {
         } else {
             Log.d("debug", "isenablestick = false");
         }
+    }
+
+    // 语音识别部分
+    private void initSpeechEngine(){
+        mEngineType =  SpeechConstant.TYPE_LOCAL;
+        mAsr = SpeechRecognizer.createRecognizer(this, mInitListener);
+//        mLocalLexicon = "张海羊\n刘婧\n王锋\n";        // 初始化语法、命令词
+        mLocalGrammar = FucUtil.readFile(this,"call.bnf", "utf-8");
+    }
+
+    private void buildGrammar(){
+        mAsr.setParameter(SpeechConstant.PARAMS, null);
+        // 设置文本编码格式
+        mAsr.setParameter(SpeechConstant.TEXT_ENCODING,"utf-8");
+        // 设置引擎类型
+        mAsr.setParameter(SpeechConstant.ENGINE_TYPE, mEngineType);
+        // 设置语法构建路径
+        mAsr.setParameter(ResourceUtil.GRM_BUILD_PATH, grmPath);
+        //使用8k音频的时候请解开注释
+//             mAsr.setParameter(SpeechConstant.SAMPLE_RATE, "8000");
+        // 设置资源路径
+        mAsr.setParameter(ResourceUtil.ASR_RES_PATH, getResourcePath());
+        int ret = mAsr.buildGrammar(GRAMMAR_TYPE_BNF, mLocalGrammar, grammarListener);
+        if(ret != ErrorCode.SUCCESS){
+            Toast.makeText(getApplicationContext(),"语法构建失败,错误码：" + ret,Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void recognizeOrder(){
+        if (!setParam()) {
+            Toast.makeText(getApplicationContext(),"请先构建语法。",Toast.LENGTH_LONG).show();
+            return;
+        };
+
+        int ret = mAsr.startListening(mRecognizerListener);
+        if (ret != ErrorCode.SUCCESS) {
+            Toast.makeText(getApplicationContext(),"识别失败,错误码: " + ret,Toast.LENGTH_LONG).show();
+        }
+    }
+
+    /**
+     * 初始化监听器。
+     */
+    private InitListener mInitListener = new InitListener() {
+
+        @Override
+        public void onInit(int code) {
+            Log.d(TAG, "SpeechRecognizer init() code = " + code);
+            if (code != ErrorCode.SUCCESS) {
+                showTip("初始化失败,错误码："+code);
+            }
+        }
+    };
+
+    /**
+     * 更新词典监听器。
+     */
+    private LexiconListener lexiconListener = new LexiconListener() {
+        @Override
+        public void onLexiconUpdated(String lexiconId, SpeechError error) {
+            if(error == null){
+                showTip("词典更新成功");
+            }else{
+                showTip("词典更新失败,错误码："+error.getErrorCode());
+            }
+        }
+    };
+
+    /**
+     * 构建语法监听器。
+     */
+    private GrammarListener grammarListener = new GrammarListener() {
+        @Override
+        public void onBuildFinish(String grammarId, SpeechError error) {
+            if(error == null){
+                if (mEngineType.equals(SpeechConstant.TYPE_CLOUD)) {
+                    SharedPreferences.Editor editor = mSharedPreferences.edit();
+                    if(!TextUtils.isEmpty(grammarId))
+                        editor.putString(KEY_GRAMMAR_ABNF_ID, grammarId);
+                    editor.commit();
+                }
+                showTip("语法构建成功：" + grammarId);
+            }else{
+                showTip("语法构建失败,错误码：" + error.getErrorCode());
+            }
+        }
+    };
+    /**
+     * 获取联系人监听器。
+     */
+    private ContactListener mContactListener = new ContactListener() {
+        @Override
+        public void onContactQueryFinish(String contactInfos, boolean changeFlag) {
+            //获取联系人
+            mLocalLexicon = contactInfos;
+        }
+    };
+    /**
+     * 识别监听器。
+     */
+    private RecognizerListener mRecognizerListener = new RecognizerListener() {
+
+        @Override
+        public void onVolumeChanged(int volume, byte[] data) {
+            showTip("当前正在说话，音量大小：" + volume);
+            Log.d(TAG, "返回音频数据："+data.length);
+        }
+
+        @Override
+        public void onResult(final RecognizerResult result, boolean isLast) {
+            if (null != result && !TextUtils.isEmpty(result.getResultString())) {
+                Log.d(TAG, "recognizer result：" + result.getResultString());
+                String text = "";
+                if (mResultType.equals("json")) {
+                    text = JsonParser.parseGrammarResult(result.getResultString(), mEngineType);
+                } else if (mResultType.equals("xml")) {
+                    text = XmlParser.parseNluResult(result.getResultString());
+                }
+                // 显示
+//                ((EditText) findViewById(R.id.isr_text)).setText(text);
+            } else {
+                Log.d(TAG, "recognizer result : null");
+            }
+        }
+
+        @Override
+        public void onEndOfSpeech() {
+            // 此回调表示：检测到了语音的尾端点，已经进入识别过程，不再接受语音输入
+            showTip("结束说话");
+        }
+
+        @Override
+        public void onBeginOfSpeech() {
+            // 此回调表示：sdk内部录音机已经准备好了，用户可以开始语音输入
+            showTip("开始说话");
+        }
+
+        @Override
+        public void onError(SpeechError error) {
+            showTip("onError Code："    + error.getErrorCode());
+        }
+
+        @Override
+        public void onEvent(int eventType, int arg1, int arg2, Bundle obj) {
+            // 以下代码用于获取与云端的会话id，当业务出错时将会话id提供给技术支持人员，可用于查询会话日志，定位出错原因
+            // 若使用本地能力，会话id为null
+            // if (SpeechEvent.EVENT_SESSION_ID == eventType) {
+            //    String sid = obj.getString(SpeechEvent.KEY_EVENT_SESSION_ID);
+            //    Log.d(TAG, "session id =" + sid);
+            // }
+        }
+
+    };
+
+
+
+    private void showTip(final String str) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mToast.setText(str);
+                mToast.show();
+            }
+        });
+    }
+
+    /**
+     * 参数设置
+     * @param
+     * @return
+     */
+    public boolean setParam(){
+        boolean result = false;
+        // 清空参数
+        mAsr.setParameter(SpeechConstant.PARAMS, null);
+        // 设置识别引擎
+        mAsr.setParameter(SpeechConstant.ENGINE_TYPE, mEngineType);
+
+        // 设置本地识别资源
+        mAsr.setParameter(ResourceUtil.ASR_RES_PATH, getResourcePath());
+        // 设置语法构建路径
+        mAsr.setParameter(ResourceUtil.GRM_BUILD_PATH, grmPath);
+        // 设置返回结果格式
+        mAsr.setParameter(SpeechConstant.RESULT_TYPE, mResultType);
+        // 设置本地识别使用语法id
+        mAsr.setParameter(SpeechConstant.LOCAL_GRAMMAR, "call");
+        // 设置识别的门限值
+        mAsr.setParameter(SpeechConstant.MIXED_THRESHOLD, "30");
+        // 使用8k音频的时候请解开注释
+//       mAsr.setParameter(SpeechConstant.SAMPLE_RATE, "8000");
+        result = true;
+
+
+        // 设置音频保存路径，保存音频格式支持pcm、wav，设置路径为sd卡请注意WRITE_EXTERNAL_STORAGE权限
+        // 注：AUDIO_FORMAT参数语记需要更新版本才能生效
+        mAsr.setParameter(SpeechConstant.AUDIO_FORMAT,"wav");
+        mAsr.setParameter(SpeechConstant.ASR_AUDIO_PATH, Environment.getExternalStorageDirectory()+"/msc/asr.wav");
+        return result;
+    }
+
+    //获取识别资源路径
+    private String getResourcePath(){
+        StringBuffer tempBuffer = new StringBuffer();
+        //识别通用资源
+        tempBuffer.append(ResourceUtil.generateResourcePath(this, ResourceUtil.RESOURCE_TYPE.assets, "asr/common.jet"));
+        //识别8k资源-使用8k的时候请解开注释
+//    tempBuffer.append(";");
+//    tempBuffer.append(ResourceUtil.generateResourcePath(this, RESOURCE_TYPE.assets, "asr/common_8k.jet"));
+        return tempBuffer.toString();
     }
 
 }
