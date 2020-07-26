@@ -23,6 +23,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import dji.common.error.DJIError;
+import dji.common.flightcontroller.FlightOrientationMode;
 import dji.common.flightcontroller.virtualstick.FlightControlData;
 import dji.common.flightcontroller.virtualstick.FlightCoordinateSystem;
 import dji.common.flightcontroller.virtualstick.Limits;
@@ -316,6 +317,12 @@ public class CompleteWidgetActivity extends Activity {
             Toast.makeText(getApplicationContext(), "飞机未连接", Toast.LENGTH_LONG).show();
             return;
         }
+        mFlightController.setFlightOrientationMode(FlightOrientationMode.AIRCRAFT_HEADING, new CommonCallbacks.CompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+
+            }
+        });
 
         mFlightController.setVirtualStickModeEnabled(true, new CommonCallbacks.CompletionCallback() {
             @Override
@@ -352,7 +359,7 @@ public class CompleteWidgetActivity extends Activity {
         });
     }
 
-    class SendVirtualStickDataTask extends TimerTask {
+    private class SendVirtualStickDataTask extends TimerTask {
 
         @Override
         public void run() {
@@ -362,7 +369,7 @@ public class CompleteWidgetActivity extends Activity {
                         new CommonCallbacks.CompletionCallback() {
                             @Override
                             public void onResult(DJIError djiError) {
-
+//                                Log.d("debug", "sendVirtualStickFlightControlData success， 指令发送正确");
                             }
                         }
                 );
@@ -370,7 +377,13 @@ public class CompleteWidgetActivity extends Activity {
         }
     }
 
-    class VirtualStickPB{
+    /**
+     *  rockerX 杆量比[-1, 1], 前/后(+/-)
+     *  rockerY 杆量比[-1, 1], 左/右(-/+)
+     *  rockerZ 杆量比[-1, 1], 上/下(-/+)
+     *  rockerRotate 杆量比[-1, 1], 顺时针/逆时针(+/-)旋转
+     */
+    private class VirtualStickPB{
         float rockerX;
         float rockerY;
         float rockerZ;
@@ -380,17 +393,10 @@ public class CompleteWidgetActivity extends Activity {
             this.rockerY = rockerY;
             this.rockerZ = rockerZ;
             this.rockerRotation = rockerRotation;
-
         }
     }
-    /**
-     *  rockerX 杆量比[-1, 1], 前/后(+/-)
-     *  rockerY 杆量比[-1, 1], 左/右(-/+)
-     *  rockerZ 杆量比[-1, 1], 上/下(-/+)
-     *  rockerRotate 杆量比[-1, 1], 顺时针/逆时针(+/-)旋转
-     */
 
-    private void fly(VirtualStickPB bean) {
+    private void executeFlying(VirtualStickPB bean) {
         if(mFlightController == null){
             Toast.makeText(getApplicationContext(), "飞机未连接", Toast.LENGTH_LONG).show();
             return;
