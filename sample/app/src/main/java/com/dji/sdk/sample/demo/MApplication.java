@@ -9,6 +9,11 @@ import com.iflytek.cloud.SpeechConstant;
 import com.iflytek.cloud.SpeechUtility;
 import com.secneo.sdk.Helper;
 
+import dji.sdk.base.BaseProduct;
+import dji.sdk.flightcontroller.FlightController;
+import dji.sdk.products.Aircraft;
+import dji.sdk.sdkmanager.DJISDKManager;
+
 import static com.dji.sdk.sample.demo.DJIConnectionControlActivity.ACCESSORY_ATTACHED;
 
 public class MApplication extends Application {
@@ -43,4 +48,27 @@ public class MApplication extends Application {
         super.attachBaseContext(paramContext);
         Helper.install(MApplication.this);
     }
+
+    private static BaseProduct mProduct;
+
+    public static synchronized BaseProduct getProductInstance() {
+        if (null == mProduct) {
+            mProduct = DJISDKManager.getInstance().getProduct();
+        }
+        return mProduct;
+    }
+
+    public static boolean isAircraftConnected() {
+        return getProductInstance() != null && getProductInstance() instanceof Aircraft;
+    }
+
+    public static synchronized Aircraft getAircraftInstance() {
+        if (!isAircraftConnected()) return null;
+        return (Aircraft) getProductInstance();
+    }
+//    public static synchronized FlightController getFlightController() {
+//        if (!isAircraftConnected()) return null;
+//        return (FlightController) getProductInstance().;
+//    }
+
 }

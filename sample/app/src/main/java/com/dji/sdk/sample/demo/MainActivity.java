@@ -5,6 +5,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -61,7 +63,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Popu
                 loginAccount();
                 DJISDKManager.getInstance().startConnectionToProduct();
 
-                Toast.makeText(getApplicationContext(), "SDK registration succeeded!", Toast.LENGTH_LONG).show();
+//                Toast.makeText(getApplicationContext(), "SDK registration succeeded!", Toast.LENGTH_LONG).show();
+                findViewById(R.id.complete_ui_widgets).setBackgroundColor(Color.parseColor("#00DD00"));
             } else {
 
                 Toast.makeText(getApplicationContext(),
@@ -151,51 +154,51 @@ public class MainActivity extends Activity implements View.OnClickListener, Popu
         SpeechUtility.createUtility(MainActivity.this, SpeechConstant.APPID +"=5f0f15d5");
         isAppStarted = true;
         findViewById(R.id.complete_ui_widgets).setOnClickListener(this);
-        findViewById(R.id.bt_customized_ui_widgets).setOnClickListener(this);
-        findViewById(R.id.bt_map_widget).setOnClickListener(this);
-        TextView versionText = (TextView) findViewById(R.id.version);
-        versionText.setText(getResources().getString(R.string.sdk_version, DJISDKManager.getInstance().getSDKVersion()));
-        bridgeModeEditText = (EditText) findViewById(R.id.edittext_bridge_ip);
-        bridgeModeEditText.setText(PreferenceManager.getDefaultSharedPreferences(this).getString(LAST_USED_BRIDGE_IP,""));
-        bridgeModeEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if (actionId == EditorInfo.IME_ACTION_SEARCH
-                    || actionId == EditorInfo.IME_ACTION_DONE
-                    || event != null
-                    && event.getAction() == KeyEvent.ACTION_DOWN
-                    && event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
-                    if (event != null && event.isShiftPressed()) {
-                        return false;
-                    } else {
-                        // the user is done typing.
-                        handleBridgeIPTextChange();
-                    }
-                }
-                return false; // pass on to other listeners.
-            }
-        });
-        bridgeModeEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (s != null && s.toString().contains("\n")) {
-                    // the user is done typing.
-                    // remove new line characcter
-                    final String currentText = bridgeModeEditText.getText().toString();
-                    bridgeModeEditText.setText(currentText.substring(0, currentText.indexOf('\n')));
-                    handleBridgeIPTextChange();
-                }
-            }
-        });
+//        TextView versionText = (TextView) findViewById(R.id.version);
+//        versionText.setText(getResources().getString(R.string.sdk_version, DJISDKManager.getInstance().getSDKVersion()));
+//        findViewById(R.id.bt_customized_ui_widgets).setOnClickListener(this);
+//        findViewById(R.id.bt_map_widget).setOnClickListener(this);
+//        bridgeModeEditText = (EditText) findViewById(R.id.edittext_bridge_ip);
+//        bridgeModeEditText.setText(PreferenceManager.getDefaultSharedPreferences(this).getString(LAST_USED_BRIDGE_IP,""));
+//        bridgeModeEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+//            @Override
+//            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+//                if (actionId == EditorInfo.IME_ACTION_SEARCH
+//                    || actionId == EditorInfo.IME_ACTION_DONE
+//                    || event != null
+//                    && event.getAction() == KeyEvent.ACTION_DOWN
+//                    && event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+//                    if (event != null && event.isShiftPressed()) {
+//                        return false;
+//                    } else {
+//                        // the user is done typing.
+//                        handleBridgeIPTextChange();
+//                    }
+//                }
+//                return false; // pass on to other listeners.
+//            }
+//        });
+//        bridgeModeEditText.addTextChangedListener(new TextWatcher() {
+//            @Override
+//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//
+//            }
+//
+//            @Override
+//            public void onTextChanged(CharSequence s, int start, int before, int count) {
+//            }
+//
+//            @Override
+//            public void afterTextChanged(Editable s) {
+//                if (s != null && s.toString().contains("\n")) {
+//                    // the user is done typing.
+//                    // remove new line characcter
+//                    final String currentText = bridgeModeEditText.getText().toString();
+//                    bridgeModeEditText.setText(currentText.substring(0, currentText.indexOf('\n')));
+//                    handleBridgeIPTextChange();
+//                }
+//            }
+//        });
         checkAndRequestPermissions();
     }
 
@@ -269,20 +272,23 @@ public class MainActivity extends Activity implements View.OnClickListener, Popu
         int id = view.getId();
         if (id == R.id.complete_ui_widgets) {
             nextActivityClass = CompleteWidgetActivity.class;
-        } else if (id == R.id.bt_customized_ui_widgets) {
-            nextActivityClass = CustomizedWidgetsActivity.class;
-        } else {
-            //nextActivityClass = MapWidgetActivity.class;
-            PopupMenu popup = new PopupMenu(this, view);
-            popup.setOnMenuItemClickListener(this);
-            Menu popupMenu = popup.getMenu();
-            MenuInflater inflater = popup.getMenuInflater();
-            inflater.inflate(R.menu.map_select_menu, popupMenu);
-            popupMenu.findItem(R.id.here_map).setEnabled(isHereMapsSupported());
-            popupMenu.findItem(R.id.google_map).setEnabled(isGoogleMapsSupported(this));
-            popup.show();
+        }else{
             return;
         }
+//        else if (id == R.id.bt_customized_ui_widgets) {
+//            nextActivityClass = CustomizedWidgetsActivity.class;
+//        } else {
+//            //nextActivityClass = MapWidgetActivity.class;
+//            PopupMenu popup = new PopupMenu(this, view);
+//            popup.setOnMenuItemClickListener(this);
+//            Menu popupMenu = popup.getMenu();
+//            MenuInflater inflater = popup.getMenuInflater();
+//            inflater.inflate(R.menu.map_select_menu, popupMenu);
+//            popupMenu.findItem(R.id.here_map).setEnabled(isHereMapsSupported());
+//            popupMenu.findItem(R.id.google_map).setEnabled(isGoogleMapsSupported(this));
+//            popup.show();
+//            return;
+//        }
 
         Intent intent = new Intent(this, nextActivityClass);
         startActivity(intent);
@@ -306,8 +312,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Popu
                 mapBrand = 3;
                 break;
         }
-        intent.putExtra(MapWidgetActivity.MAP_PROVIDER, mapBrand);
-        startActivity(intent);
+//        intent.putExtra(MapWidgetActivity.MAP_PROVIDER, mapBrand);
+//        startActivity(intent);
         return false;
     }
 
