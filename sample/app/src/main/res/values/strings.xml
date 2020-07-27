@@ -45,6 +45,7 @@
     <string name="sync">Sync</string>
     <string name="speech_fly">语音控制</string>
     <string name="remote_fly">遥控飞行</string>
+    <string name="fly_command">等待接受命令</string>
     <string-array name="iconArray">
         <item>Aircraft</item>
         <item>Home</item>

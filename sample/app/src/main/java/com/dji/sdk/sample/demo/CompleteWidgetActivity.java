@@ -2,17 +2,24 @@ package com.dji.sdk.sample.demo;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
+import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
@@ -31,13 +38,15 @@ import com.iflytek.cloud.SpeechConstant;
 import com.iflytek.cloud.SpeechError;
 import com.iflytek.cloud.SpeechRecognizer;
 import com.iflytek.cloud.util.ResourceUtil;
-import com.iflytek.speech.GrammarListener;
-import com.iflytek.speech.RecognizerListener;
-import com.iflytek.speech.RecognizerResult;
+import com.iflytek.cloud.GrammarListener;
+import com.iflytek.cloud.LexiconListener;
+import com.iflytek.cloud.RecognizerListener;
+import com.iflytek.cloud.RecognizerResult;
 
 import java.util.Timer;
 import java.util.TimerTask;
 
+import androidx.appcompat.app.AlertDialog;
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.FlightOrientationMode;
 import dji.common.flightcontroller.virtualstick.FlightControlData;
@@ -90,6 +99,9 @@ public class CompleteWidgetActivity extends Activity {
 //    private  final String GRAMMAR_TYPE_ABNF = "abnf";
     private  final String GRAMMAR_TYPE_BNF = "bnf";
     private String mEngineType;
+    private String mLocalLexicon = null;
+    private String groupName;
+    private String groupInfo;
 
     @SuppressLint("ShowToast")
     @Override
@@ -112,7 +124,7 @@ public class CompleteWidgetActivity extends Activity {
                 map.setOnMapClickListener(new DJIMap.OnMapClickListener() {
                     @Override
                     public void onMapClick(DJILatLng latLng) {
-                        onViewClick(mapWidget);
+//                        onViewClick(mapWidget);
                     }
                 });
             }
@@ -121,55 +133,58 @@ public class CompleteWidgetActivity extends Activity {
 
         parentView = (ViewGroup) findViewById(R.id.root_view);
 
-        fpvWidget = findViewById(R.id.fpv_widget);
-        fpvWidget.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onViewClick(fpvWidget);
-            }
-        });
-        primaryVideoView = (RelativeLayout) findViewById(R.id.fpv_container);
-        secondaryVideoView = (FrameLayout) findViewById(R.id.secondary_video_view);
-        secondaryFPVWidget = findViewById(R.id.secondary_fpv_widget);
-        secondaryFPVWidget.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                swapVideoSource();
-            }
-        });
-        updateSecondaryVideoVisibility();
+//        fpvWidget = findViewById(R.id.fpv_widget);
+//        fpvWidget.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                onViewClick(fpvWidget);
+//            }
+//        });
+//        primaryVideoView = (RelativeLayout) findViewById(R.id.fpv_container);
+//        secondaryVideoView = (FrameLayout) findViewById(R.id.secondary_video_view);
+//        secondaryFPVWidget = findViewById(R.id.secondary_fpv_widget);
+//        secondaryFPVWidget.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                swapVideoSource();
+//            }
+//        });
+//        updateSecondaryVideoVisibility();
 
         // 语音控制部分的初始化
         mToast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
+
         initSpeechEngine();
         switchFlyMethod = (Switch)findViewById(R.id.fly_method);
         switchFlyMethod.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(isChecked)
-                    enableSpeechFlying();
+                if(isChecked) {
+                    enableVirtualStickFlying();
+                    listenSpeechCommand();
+                }
                 else
-                    disableSpeechFlying();
+                    disableVirtualStickFlying();
             }
         });
     }
 
-    private void onViewClick(View view) {
-        if (view == fpvWidget && !isMapMini) {
-            resizeFPVWidget(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT, 0, 0);
-            reorderCameraCapturePanel();
-            ResizeAnimation mapViewAnimation = new ResizeAnimation(mapWidget, deviceWidth, deviceHeight, width, height, margin);
-            mapWidget.startAnimation(mapViewAnimation);
-            isMapMini = true;
-        } else if (view == mapWidget && isMapMini) {
-            hidePanels();
-            resizeFPVWidget(width, height, margin, 12);
-            reorderCameraCapturePanel();
-            ResizeAnimation mapViewAnimation = new ResizeAnimation(mapWidget, width, height, deviceWidth, deviceHeight, 0);
-            mapWidget.startAnimation(mapViewAnimation);
-            isMapMini = false;
-        }
-    }
+//    private void onViewClick(View view) {
+//        if (view == fpvWidget && !isMapMini) {
+//            resizeFPVWidget(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT, 0, 0);
+//            reorderCameraCapturePanel();
+//            ResizeAnimation mapViewAnimation = new ResizeAnimation(mapWidget, deviceWidth, deviceHeight, width, height, margin);
+//            mapWidget.startAnimation(mapViewAnimation);
+//            isMapMini = true;
+//        } else if (view == mapWidget && isMapMini) {
+//            hidePanels();
+//            resizeFPVWidget(width, height, margin, 12);
+//            reorderCameraCapturePanel();
+//            ResizeAnimation mapViewAnimation = new ResizeAnimation(mapWidget, width, height, deviceWidth, deviceHeight, 0);
+//            mapWidget.startAnimation(mapViewAnimation);
+//            isMapMini = false;
+//        }
+//    }
 
     private void resizeFPVWidget(int width, int height, int margin, int fpvInsertPosition) {
         RelativeLayout.LayoutParams fpvParams = (RelativeLayout.LayoutParams) primaryVideoView.getLayoutParams();
@@ -268,7 +283,7 @@ public class CompleteWidgetActivity extends Activity {
             mAsr.destroy();
         }
         // 释放飞行控制权
-        disableSpeechFlying();
+        disableVirtualStickFlying();
         if (mSendVirtualStickDataTask != null) {
             mSendVirtualStickDataTask.cancel();
         }
@@ -349,7 +364,7 @@ public class CompleteWidgetActivity extends Activity {
         }
     }
 
-    private void enableSpeechFlying(){
+    private void enableVirtualStickFlying(){
         if(mFlightController == null){
             Toast.makeText(getApplicationContext(), "飞机未连接", Toast.LENGTH_LONG).show();
             return;
@@ -382,9 +397,9 @@ public class CompleteWidgetActivity extends Activity {
         });
     }
 
-    private void disableSpeechFlying(){
+    private void disableVirtualStickFlying(){
         if(mFlightController == null){
-            Toast.makeText(getApplicationContext(), "飞机未连接", Toast.LENGTH_LONG).show();
+            showTip("飞机未连接");
             return;
         }
         mFlightController.setVirtualStickModeEnabled(false, new CommonCallbacks.CompletionCallback() {
@@ -506,10 +521,11 @@ public class CompleteWidgetActivity extends Activity {
         mEngineType =  SpeechConstant.TYPE_LOCAL;
         mAsr = SpeechRecognizer.createRecognizer(this, mInitListener);
 //        mLocalLexicon = "张海羊\n刘婧\n王锋\n";        // 初始化语法、命令词
-        mLocalGrammar = FucUtil.readFile(this,"call.bnf", "utf-8");
+        mLocalGrammar = FucUtil.readFile(this,"command.bnf", "utf-8");
+        buildGrammer();
     }
 
-    private void buildGrammar(){
+    private void buildGrammer(){
         mAsr.setParameter(SpeechConstant.PARAMS, null);
         // 设置文本编码格式
         mAsr.setParameter(SpeechConstant.TEXT_ENCODING,"utf-8");
@@ -523,19 +539,18 @@ public class CompleteWidgetActivity extends Activity {
         mAsr.setParameter(ResourceUtil.ASR_RES_PATH, getResourcePath());
         int ret = mAsr.buildGrammar(GRAMMAR_TYPE_BNF, mLocalGrammar, grammarListener);
         if(ret != ErrorCode.SUCCESS){
-            Toast.makeText(getApplicationContext(),"语法构建失败,错误码：" + ret,Toast.LENGTH_LONG).show();
+            showTip("语法构建失败,错误码：" + ret);
         }
     }
 
-    private void recognizeOrder(){
+    private void listenSpeechCommand(){
         if (!setParam()) {
-            Toast.makeText(getApplicationContext(),"请先构建语法。",Toast.LENGTH_LONG).show();
+            showTip("请先构建语法。");
             return;
         };
-
         int ret = mAsr.startListening(mRecognizerListener);
         if (ret != ErrorCode.SUCCESS) {
-            Toast.makeText(getApplicationContext(),"识别失败,错误码: " + ret,Toast.LENGTH_LONG).show();
+            showTip("识别失败,错误码: " + ret);
         }
     }
 
@@ -558,7 +573,7 @@ public class CompleteWidgetActivity extends Activity {
      */
     private LexiconListener lexiconListener = new LexiconListener() {
         @Override
-        public void onLexiconUpdated(String lexiconId, SpeechError error) {
+        public void onLexiconUpdated(String s, SpeechError error) {
             if(error == null){
                 showTip("词典更新成功");
             }else{
@@ -572,39 +587,23 @@ public class CompleteWidgetActivity extends Activity {
      */
     private GrammarListener grammarListener = new GrammarListener() {
         @Override
-        public void onBuildFinish(String grammarId, SpeechError error) {
-            if(error == null){
-                if (mEngineType.equals(SpeechConstant.TYPE_CLOUD)) {
-                    SharedPreferences.Editor editor = mSharedPreferences.edit();
-                    if(!TextUtils.isEmpty(grammarId))
-                        editor.putString(KEY_GRAMMAR_ABNF_ID, grammarId);
-                    editor.commit();
-                }
-                showTip("语法构建成功：" + grammarId);
-            }else{
+        public void onBuildFinish(String s, SpeechError error) {
+            if (error == null) {
+                showTip("语法构建成功：" + s);
+            } else {
                 showTip("语法构建失败,错误码：" + error.getErrorCode());
             }
         }
-    };
-    /**
-     * 获取联系人监听器。
-     */
-    private ContactListener mContactListener = new ContactListener() {
-        @Override
-        public void onContactQueryFinish(String contactInfos, boolean changeFlag) {
-            //获取联系人
-            mLocalLexicon = contactInfos;
-        }
-    };
+     };
+
     /**
      * 识别监听器。
      */
     private RecognizerListener mRecognizerListener = new RecognizerListener() {
-
         @Override
         public void onVolumeChanged(int volume, byte[] data) {
             showTip("当前正在说话，音量大小：" + volume);
-            Log.d(TAG, "返回音频数据："+data.length);
+            Log.d(TAG, "返回音频数据：" + data.length);
         }
 
         @Override
@@ -613,12 +612,12 @@ public class CompleteWidgetActivity extends Activity {
                 Log.d(TAG, "recognizer result：" + result.getResultString());
                 String text = "";
                 if (mResultType.equals("json")) {
-                    text = JsonParser.parseGrammarResult(result.getResultString(), mEngineType);
+                    text = JsonParser.parseGrammarResult(result.getResultString(), SpeechConstant.TYPE_LOCAL);
                 } else if (mResultType.equals("xml")) {
                     text = XmlParser.parseNluResult(result.getResultString());
                 }
                 // 显示
-//                ((EditText) findViewById(R.id.isr_text)).setText(text);
+                showTip(text);
             } else {
                 Log.d(TAG, "recognizer result : null");
             }
@@ -637,23 +636,19 @@ public class CompleteWidgetActivity extends Activity {
         }
 
         @Override
-        public void onError(SpeechError error) {
-            showTip("onError Code："    + error.getErrorCode());
+        public void onError(SpeechError error)  {
+            if (error == null) {
+                showTip("语法识别引擎成功");
+            } else {
+                showTip("语法识别引擎成功,错误码：" + error.getErrorCode());
+            }
         }
 
         @Override
-        public void onEvent(int eventType, int arg1, int arg2, Bundle obj) {
-            // 以下代码用于获取与云端的会话id，当业务出错时将会话id提供给技术支持人员，可用于查询会话日志，定位出错原因
-            // 若使用本地能力，会话id为null
-            // if (SpeechEvent.EVENT_SESSION_ID == eventType) {
-            //    String sid = obj.getString(SpeechEvent.KEY_EVENT_SESSION_ID);
-            //    Log.d(TAG, "session id =" + sid);
-            // }
+        public void onEvent(int i, int i1, int i2, Bundle bundle) {
+
         }
-
     };
-
-
 
     private void showTip(final String str) {
         runOnUiThread(new Runnable() {
@@ -684,7 +679,7 @@ public class CompleteWidgetActivity extends Activity {
         // 设置返回结果格式
         mAsr.setParameter(SpeechConstant.RESULT_TYPE, mResultType);
         // 设置本地识别使用语法id
-        mAsr.setParameter(SpeechConstant.LOCAL_GRAMMAR, "call");
+        mAsr.setParameter(SpeechConstant.LOCAL_GRAMMAR, "command");
         // 设置识别的门限值
         mAsr.setParameter(SpeechConstant.MIXED_THRESHOLD, "30");
         // 使用8k音频的时候请解开注释
@@ -710,4 +705,76 @@ public class CompleteWidgetActivity extends Activity {
         return tempBuffer.toString();
     }
 
+    private void updateLexicon(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = LayoutInflater.from(this);
+        final View v = inflater.inflate(R.layout.word_info_editor, null);
+        final EditText wordGroupName = v.findViewById(R.id.enter_word_group_name);
+        final EditText wordGroupInfo = v.findViewById(R.id.enter_word_group_info);
+        Button cancleButton = v.findViewById(R.id.register_cancle);
+        Button confirmButton = v.findViewById(R.id.register_confirm);
+        final Dialog dialog = builder.create();
+        //点击EditText弹出软键盘
+        cancleButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showTip( "取消");
+                dialog.cancel();
+            }
+        });
+
+        confirmButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if (!wordGroupName.getText().toString().equals("")) {
+                    groupName= wordGroupName.getText().toString();
+                }
+                if (!wordGroupInfo.getText().toString().equals("")) {
+                    groupInfo = wordGroupInfo.getText().toString();
+                }
+                mLocalLexicon = getUpdateInfo(groupInfo);
+//                ((EditText) findViewById(R.id.isr_text)).setText(mLocalLexicon);
+                mAsr.setParameter(SpeechConstant.PARAMS, null);
+                // 设置引擎类型
+                mAsr.setParameter(SpeechConstant.ENGINE_TYPE, SpeechConstant.TYPE_LOCAL);
+                // 设置资源路径
+                mAsr.setParameter(ResourceUtil.ASR_RES_PATH, getResourcePath());
+                // 设置语法构建路径
+                mAsr.setParameter(ResourceUtil.GRM_BUILD_PATH, grmPath);
+                // 设置语法名称
+                mAsr.setParameter(SpeechConstant.GRAMMAR_LIST, "call");
+                // 设置文本编码格式
+                mAsr.setParameter(SpeechConstant.TEXT_ENCODING, "utf-8");
+                //执行更新操作
+                int ret = mAsr.updateLexicon(groupName, mLocalLexicon, lexiconListener);
+                if (ret != ErrorCode.SUCCESS) {
+                    showTip("更新词典失败,错误码：" + ret);
+                }
+                else{
+                    showTip("更新词典成功" );
+                }
+                dialog.cancel();
+            }
+        });
+
+        dialog.show();
+        dialog.getWindow().setContentView(v);//自定义布局应该在这里添加，要在dialog.show()的后面
+        dialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+        dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+    }
+
+    private String getUpdateInfo(String groupInfo) {
+        String[] wordList=groupInfo.split("，");
+        StringBuilder builder=new StringBuilder();
+        for(int i=0;i<wordList.length;i++){
+            if(i==wordList.length-1) {
+                builder.append(wordList[i] );
+                Log.d(TAG, "getUpdateInfo: "+wordList[i]);
+            }else{
+                builder.append(wordList[i] + "\n");
+            }
+        }
+        return builder.toString();
+    }
 }

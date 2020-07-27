@@ -1,1 +1,1 @@
-include ':app', ':mscV5PlusDemo'
+include ':app'

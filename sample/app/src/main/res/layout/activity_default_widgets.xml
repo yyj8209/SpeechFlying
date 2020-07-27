@@ -33,7 +33,6 @@
         android:layout_height="match_parent"
         android:layout_marginBottom="40dp"
         android:layout_toRightOf="@+id/TakeOffReturnPanel"
-        android:layout_toLeftOf="@+id/CameraCapturePanel"
         android:layout_below="@+id/camera"
         tools:ignore="RtlHardcoded">
 
@@ -121,7 +120,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="5dp"
         android:layout_below="@id/camera"
-        android:layout_toLeftOf="@+id/CameraCapturePanel"
         android:background="@color/dark_gray"
         android:visibility="gone"
         android:orientation="horizontal">
@@ -165,15 +163,19 @@
         android:layout_alignParentBottom="true"/>
 
     <!-- Everything below this line will appear on top of the full-screen map widget -->
-
-    <Switch
-        android:id="@+id/fly_method"
+    <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_height="37dp"
+        android:layout_height="100dp"
         android:layout_alignParentRight="true"
         android:layout_below="@id/camera"
         android:layout_marginTop="20dp"
-        android:paddingRight="10dp"
+        android:background="@color/dark_gray"
+        android:orientation="vertical">
+    <Switch
+        android:id="@+id/fly_method"
+        android:layout_width="match_parent"
+        android:layout_marginTop="10dp"
+        android:layout_height="40dp"
         android:splitTrack="false"
         android:switchMinWidth="20dp"
         android:switchTextAppearance="@style/My.TextAppearance"
@@ -182,7 +184,14 @@
         android:thumb="@drawable/bg_login_button_press"
         android:track="@android:drawable/button_onoff_indicator_on"
         tools:checked="false" />
-
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/tv_command"
+        android:layout_marginTop="10dp"
+        android:text="@string/fly_command"
+        />
+    </LinearLayout>
     <!-- Widgets in top status bar -->
     <LinearLayout
         android:id="@+id/signal"
