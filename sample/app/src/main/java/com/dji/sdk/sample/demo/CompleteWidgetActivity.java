@@ -207,11 +207,11 @@ public class CompleteWidgetActivity extends Activity {
         parentView.addView(primaryVideoView, fpvInsertPosition);
     }
 
-    private void reorderCameraCapturePanel() {
-        View cameraCapturePanel = findViewById(R.id.CameraCapturePanel);
-        parentView.removeView(cameraCapturePanel);
-        parentView.addView(cameraCapturePanel, isMapMini ? 9 : 13);
-    }
+//    private void reorderCameraCapturePanel() {
+//        View cameraCapturePanel = findViewById(R.id.CameraCapturePanel);
+//        parentView.removeView(cameraCapturePanel);
+//        parentView.addView(cameraCapturePanel, isMapMini ? 9 : 13);
+//    }
 
     private void swapVideoSource() {
         if (secondaryFPVWidget.getVideoSource() == FPVWidget.VideoSource.SECONDARY) {
@@ -239,9 +239,9 @@ public class CompleteWidgetActivity extends Activity {
         }
 
         //These panels have buttons that toggle them, so call the methods to make sure the button state is correct.
-        CameraControlsWidget controlsWidget = findViewById(R.id.CameraCapturePanel);
-        controlsWidget.setAdvancedPanelVisibility(false);
-        controlsWidget.setExposurePanelVisibility(false);
+//        CameraControlsWidget controlsWidget = findViewById(R.id.CameraCapturePanel);
+//        controlsWidget.setAdvancedPanelVisibility(false);
+//        controlsWidget.setExposurePanelVisibility(false);
 
         //These panels don't have a button state, so we can just hide them.
         findViewById(R.id.pre_flight_check_list).setVisibility(View.GONE);
