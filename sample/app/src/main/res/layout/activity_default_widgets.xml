@@ -43,6 +43,7 @@
 
     </RelativeLayout>
 
+<<<<<<< HEAD
 <!--    <FrameLayout-->
 <!--        android:layout_width="150dp"-->
 <!--        android:layout_height="100dp"-->
@@ -59,6 +60,24 @@
 <!--            custom:sourceCameraNameVisibility="true"-->
 <!--            custom:videoSource="secondary"/>-->
 <!--    </FrameLayout>-->
+=======
+    <FrameLayout
+        android:layout_width="150dp"
+        android:layout_height="100dp"
+        android:id="@+id/secondary_video_view"
+        android:layout_marginLeft="12dp"
+        android:layout_marginBottom="7dp"
+        android:layout_alignParentLeft="true"
+        android:layout_above="@+id/TakeOffReturnPanel"
+        android:background="@color/background_blue">
+        <dji.ux.widget.FPVWidget
+            android:id="@+id/secondary_fpv_widget"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            custom:sourceCameraNameVisibility="true"
+            custom:videoSource="secondary"/>
+    </FrameLayout>
+>>>>>>> 42b0d97fcae08c3a635cefd2308aaf8bd17920db
 
     <dji.ux.workflow.CompassCalibratingWorkFlow
         android:layout_width="match_parent"
@@ -171,25 +190,25 @@
         android:layout_marginTop="20dp"
         android:background="@color/dark_gray"
         android:orientation="vertical">
-    <Switch
-        android:id="@+id/fly_method"
-        android:layout_width="match_parent"
-        android:layout_marginTop="10dp"
-        android:layout_height="40dp"
-        android:splitTrack="false"
-        android:switchMinWidth="20dp"
-        android:switchTextAppearance="@style/My.TextAppearance"
-        android:textOff="@string/remote_fly"
-        android:textOn="@string/speech_fly"
-        android:thumb="@drawable/bg_login_button_press"
-        android:track="@android:drawable/button_onoff_indicator_on"
-        tools:checked="false" />
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/tv_command"
-        android:layout_marginTop="10dp"
-        android:text="@string/fly_command"
+        <Switch
+            android:id="@+id/fly_method"
+            android:layout_width="match_parent"
+            android:layout_marginTop="10dp"
+            android:layout_height="40dp"
+            android:splitTrack="false"
+            android:switchMinWidth="20dp"
+            android:switchTextAppearance="@style/My.TextAppearance"
+            android:textOff="@string/remote_fly"
+            android:textOn="@string/speech_fly"
+            android:thumb="@drawable/bg_login_button_press"
+            android:track="@android:drawable/button_onoff_indicator_on"
+            tools:checked="false" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/tv_command"
+            android:layout_marginTop="10dp"
+            android:text="@string/fly_command"
         />
     </LinearLayout>
     <!-- Widgets in top status bar -->
@@ -291,6 +310,7 @@
     <dji.ux.panel.CameraSettingExposurePanel
         android:layout_width="180dp"
         android:layout_below="@id/camera"
+        android:id="@+id/CameraCapturePanel"
         android:gravity="center"
         android:layout_height="263dp"
         android:visibility="gone"
