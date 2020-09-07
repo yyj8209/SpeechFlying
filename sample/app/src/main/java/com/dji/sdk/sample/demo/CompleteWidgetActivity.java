@@ -24,15 +24,14 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
-
+import com.dji.sdk.sample.demo.util.JsonParser;
+import com.dji.sdk.sample.demo.util.FucUtil;
+import com.dji.sdk.sample.demo.util.XmlParser;
 import com.dji.mapkit.core.maps.DJIMap;
 import com.dji.mapkit.core.models.DJILatLng;
-import com.dji.sdk.sample.demo.util.FucUtil;
-import com.dji.sdk.sample.demo.util.JsonParser;
-import com.dji.sdk.sample.demo.util.XmlParser;
 import com.iflytek.cloud.ErrorCode;
 import com.iflytek.cloud.InitListener;
 import com.iflytek.cloud.SpeechConstant;
@@ -50,12 +49,14 @@ import java.util.TimerTask;
 import androidx.appcompat.app.AlertDialog;
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.FlightOrientationMode;
+import dji.common.flightcontroller.simulator.InitializationData;
 import dji.common.flightcontroller.virtualstick.FlightControlData;
 import dji.common.flightcontroller.virtualstick.FlightCoordinateSystem;
 import dji.common.flightcontroller.virtualstick.Limits;
 import dji.common.flightcontroller.virtualstick.RollPitchControlMode;
 import dji.common.flightcontroller.virtualstick.VerticalControlMode;
 import dji.common.flightcontroller.virtualstick.YawControlMode;
+import dji.common.model.LocationCoordinate2D;
 import dji.common.util.CommonCallbacks;
 import dji.keysdk.CameraKey;
 import dji.keysdk.KeyManager;
@@ -103,6 +104,7 @@ public class CompleteWidgetActivity extends Activity {
     private String mLocalLexicon = null;
     private String groupName;
     private String groupInfo;
+    private TextView CommandText;
 
     @SuppressLint("ShowToast")
     @Override
@@ -118,6 +120,7 @@ public class CompleteWidgetActivity extends Activity {
         deviceHeight = displayMetrics.heightPixels;
         deviceWidth = displayMetrics.widthPixels;
 
+        CommandText = (TextView)findViewById(R.id.tv_command);
         mapWidget = findViewById(R.id.map_widget);
         mapWidget.initAMap(new MapWidget.OnMapReadyListener() {
             @Override
@@ -161,11 +164,11 @@ public class CompleteWidgetActivity extends Activity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if(isChecked) {
-                    enableVirtualStickFlying();
+//                    enableVirtualStickFlying();
                     listenSpeechCommand();
                 }
-                else
-                    disableVirtualStickFlying();
+//                else
+//                    disableVirtualStickFlying();
             }
         });
     }
@@ -346,7 +349,6 @@ public class CompleteWidgetActivity extends Activity {
 // Virtual stick 部分
     private boolean isEnableStick = false;
     private FlightControlData mSendData;
-    //  Virtual Stick 部分
     private Switch switchFlyMethod;
     private Timer mSendVirtualStickDataTimer;
     private SendVirtualStickDataTask mSendVirtualStickDataTask;
@@ -372,18 +374,17 @@ public class CompleteWidgetActivity extends Activity {
             Toast.makeText(getApplicationContext(), "飞机未连接", Toast.LENGTH_LONG).show();
             return;
         }
-        mFlightController.setFlightOrientationMode(FlightOrientationMode.AIRCRAFT_HEADING, new CommonCallbacks.CompletionCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-
-            }
-        });
+//        mFlightController.setFlightOrientationMode(FlightOrientationMode.AIRCRAFT_HEADING, new CommonCallbacks.CompletionCallback() {
+//            @Override
+//            public void onResult(DJIError djiError) {
+//
+//            }
+//        });
 
         mFlightController.setVirtualStickModeEnabled(true, new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
                 if (null == djiError) {
-//                    isEnableStick = true;
                     Log.d("debug", "setVirtualStickModeEnabled success，准备接受Virtual Stick控制");
                     mFlightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
                     mFlightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
@@ -398,6 +399,12 @@ public class CompleteWidgetActivity extends Activity {
 //                原文链接：https://blog.csdn.net/qq_26923265/article/details/82743941
             }
         });
+        mFlightController.getSimulator().start(InitializationData.createInstance(new LocationCoordinate2D(31, 117), 10, 10),
+                new CommonCallbacks.CompletionCallback(){
+                    @Override
+                    public void onResult(DJIError djiError) {
+                    }
+                });
     }
 
     private void disableVirtualStickFlying(){
@@ -412,6 +419,13 @@ public class CompleteWidgetActivity extends Activity {
                 isEnableStick = false;
             }
         });
+        mAsr.stopListening();
+        mFlightController.getSimulator().stop(new CommonCallbacks.CompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+                
+            }
+        });
     }
 
     private class SendVirtualStickDataTask extends TimerTask {
@@ -420,11 +434,13 @@ public class CompleteWidgetActivity extends Activity {
         public void run() {
 
             if (mFlightController != null) {
-                mFlightController.sendVirtualStickFlightControlData(mSendData,
+                mFlightController.sendVirtualStickFlightControlData(
+                        new FlightControlData(mPitch, mRoll, mYaw, mThrottle),
                         new CommonCallbacks.CompletionCallback() {
                             @Override
                             public void onResult(DJIError djiError) {
-//                                Log.d("debug", "sendVirtualStickFlightControlData success， 指令发送正确");
+                                if(djiError == null)
+                                Log.d("debug", "sendVirtualStickFlightControlData success， 指令发送正确");
                             }
                         }
                 );
@@ -438,29 +454,29 @@ public class CompleteWidgetActivity extends Activity {
      *  rockerZ 杆量比[-1, 1], 上/下(-/+)
      *  rockerRotate 杆量比[-1, 1], 顺时针/逆时针(+/-)旋转
      */
-    private class VirtualStickPB{
-        float rockerX;
-        float rockerY;
-        float rockerZ;
-        float rockerRotation;
-        public VirtualStickPB(float rockerX, float rockerY, float rockerZ, float rockerRotation){
-            this.rockerX = rockerX;
-            this.rockerY = rockerY;
-            this.rockerZ = rockerZ;
-            this.rockerRotation = rockerRotation;
-        }
-    }
+//    private class VirtualStickPB{
+//        float rockerX;
+//        float rockerY;
+//        float rockerZ;
+//        float rockerRotation;
+//        public VirtualStickPB(float rockerX, float rockerY, float rockerZ, float rockerRotation){
+//            this.rockerX = rockerX;
+//            this.rockerY = rockerY;
+//            this.rockerZ = rockerZ;
+//            this.rockerRotation = rockerRotation;
+//        }
+//    }
 
-    private void executeFlying(VirtualStickPB bean) {
+    private void executeFlying(FlightControlData bean) {
         if(mFlightController == null){
             Toast.makeText(getApplicationContext(), "飞机未连接", Toast.LENGTH_LONG).show();
             return;
         }
         if (isEnableStick) {
-            float rockX =  bean.rockerX;
-            float rockY =  bean.rockerY;
-            float rockZ =  bean.rockerZ;
-            float rockerRotation =  bean.rockerRotation;
+            float rockX =  bean.getPitch();
+            float rockY =  bean.getRoll();
+            float rockZ =  bean.getYaw();
+            float rockerRotation =  bean.getVerticalThrottle();
             //Log.e("dispatch", "x = " + rockX + "   y = " + rockY + "  z = " + rockZ+"  rockerRotation = "+rockerRotation);
 
             RollPitchControlMode rollPitchControlMode = mFlightController.getRollPitchControlMode();
@@ -507,7 +523,7 @@ public class CompleteWidgetActivity extends Activity {
                 mYaw = 0;
             }
 
-            mSendData = new FlightControlData(mPitch, mRoll, mYaw, mThrottle);
+//            mSendData = new FlightControlData(mPitch, mRoll, mYaw, mThrottle);
 
             if (null == mSendVirtualStickDataTimer) {
                 mSendVirtualStickDataTask = new SendVirtualStickDataTask();
@@ -621,6 +637,7 @@ public class CompleteWidgetActivity extends Activity {
                 }
                 // 显示
                 showTip(text);
+                CommandText.setText(text);
             } else {
                 Log.d(TAG, "recognizer result : null");
             }

@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/background_blue"
     android:id="@+id/root_view"
-    tools:context=".MainActivity">
+    tools:context=".CompleteWidgetActivity">
 
     <!-- Widget to see first person view (FPV) -->
     <RelativeLayout
@@ -43,7 +43,6 @@
 
     </RelativeLayout>
 
-<<<<<<< HEAD
 <!--    <FrameLayout-->
 <!--        android:layout_width="150dp"-->
 <!--        android:layout_height="100dp"-->
@@ -52,7 +51,7 @@
 <!--        android:layout_marginBottom="7dp"-->
 <!--        android:layout_alignParentLeft="true"-->
 <!--        android:layout_above="@+id/TakeOffReturnPanel"-->
-<!--        android:background="@color/black">-->
+<!--        android:background="@color/background_blue">-->
 <!--        <dji.ux.widget.FPVWidget-->
 <!--            android:id="@+id/secondary_fpv_widget"-->
 <!--            android:layout_width="match_parent"-->
@@ -60,24 +59,6 @@
 <!--            custom:sourceCameraNameVisibility="true"-->
 <!--            custom:videoSource="secondary"/>-->
 <!--    </FrameLayout>-->
-=======
-    <FrameLayout
-        android:layout_width="150dp"
-        android:layout_height="100dp"
-        android:id="@+id/secondary_video_view"
-        android:layout_marginLeft="12dp"
-        android:layout_marginBottom="7dp"
-        android:layout_alignParentLeft="true"
-        android:layout_above="@+id/TakeOffReturnPanel"
-        android:background="@color/background_blue">
-        <dji.ux.widget.FPVWidget
-            android:id="@+id/secondary_fpv_widget"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            custom:sourceCameraNameVisibility="true"
-            custom:videoSource="secondary"/>
-    </FrameLayout>
->>>>>>> 42b0d97fcae08c3a635cefd2308aaf8bd17920db
 
     <dji.ux.workflow.CompassCalibratingWorkFlow
         android:layout_width="match_parent"
