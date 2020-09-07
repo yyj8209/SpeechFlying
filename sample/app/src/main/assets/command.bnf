@@ -1,19 +1,15 @@
 #BNF+IAT 1.0 UTF-8;
 !grammar command;
-//通用词槽
 !slot <want>;
-!slot <deal>;
-//动作词槽
 !slot <velocity>;
 !slot <direct>;
 !slot <direction>;
 !slot <fly>;
 
 !start <commands>;
-<commands>:[<want>][<deal>]<velocity>[<direct>]<direction>[<fly>]|[<want>][<deal>][<velocity>][<direct>]<direction>[<fly>];
+<commands>:[<want>]<velocity>[<direct>]<direction>[<fly>];
 
 <want>:我要|我想|我想要;
-<deal>:开始|执行;
 <velocity>:快速|快点|慢速|缓慢;
 <direct>向|往;
 <direction>:上|下|前|后|左|右;

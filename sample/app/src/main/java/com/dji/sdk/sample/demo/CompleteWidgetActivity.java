@@ -24,15 +24,14 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
-
+import com.dji.sdk.sample.demo.util.JsonParser;
+import com.dji.sdk.sample.demo.util.FucUtil;
+import com.dji.sdk.sample.demo.util.XmlParser;
 import com.dji.mapkit.core.maps.DJIMap;
 import com.dji.mapkit.core.models.DJILatLng;
-import com.dji.sdk.sample.demo.util.FucUtil;
-import com.dji.sdk.sample.demo.util.JsonParser;
-import com.dji.sdk.sample.demo.util.XmlParser;
 import com.iflytek.cloud.ErrorCode;
 import com.iflytek.cloud.InitListener;
 import com.iflytek.cloud.SpeechConstant;
@@ -50,12 +49,14 @@ import java.util.TimerTask;
 import androidx.appcompat.app.AlertDialog;
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.FlightOrientationMode;
+import dji.common.flightcontroller.simulator.InitializationData;
 import dji.common.flightcontroller.virtualstick.FlightControlData;
 import dji.common.flightcontroller.virtualstick.FlightCoordinateSystem;
 import dji.common.flightcontroller.virtualstick.Limits;
 import dji.common.flightcontroller.virtualstick.RollPitchControlMode;
 import dji.common.flightcontroller.virtualstick.VerticalControlMode;
 import dji.common.flightcontroller.virtualstick.YawControlMode;
+import dji.common.model.LocationCoordinate2D;
 import dji.common.util.CommonCallbacks;
 import dji.keysdk.CameraKey;
 import dji.keysdk.KeyManager;
@@ -103,6 +104,7 @@ public class CompleteWidgetActivity extends Activity {
     private String mLocalLexicon = null;
     private String groupName;
     private String groupInfo;
+    private TextView CommandText;
 
     @SuppressLint("ShowToast")
     @Override
@@ -118,6 +120,7 @@ public class CompleteWidgetActivity extends Activity {
         deviceHeight = displayMetrics.heightPixels;
         deviceWidth = displayMetrics.widthPixels;
 
+        CommandText = (TextView)findViewById(R.id.tv_command);
         mapWidget = findViewById(R.id.map_widget);
         mapWidget.initAMap(new MapWidget.OnMapReadyListener() {
             @Override
@@ -161,11 +164,11 @@ public class CompleteWidgetActivity extends Activity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if(isChecked) {
-                    enableVirtualStickFlying();
+//                    enableVirtualStickFlying();
                     listenSpeechCommand();
                 }
-                else
-                    disableVirtualStickFlying();
+//                else
+//                    disableVirtualStickFlying();
             }
         });
     }
@@ -346,7 +349,6 @@ public class CompleteWidgetActivity extends Activity {
 // Virtual stick 部分
     private boolean isEnableStick = false;
     private FlightControlData mSendData;
-    //  Virtual Stick 部分
     private Switch switchFlyMethod;
     private Timer mSendVirtualStickDataTimer;
     private SendVirtualStickDataTask mSendVirtualStickDataTask;
@@ -372,21 +374,17 @@ public class CompleteWidgetActivity extends Activity {
             Toast.makeText(getApplicationContext(), "飞机未连接", Toast.LENGTH_LONG).show();
             return;
         }
-        mFlightController.setFlightOrientationMode(FlightOrientationMode.AIRCRAFT_HEADING, new CommonCallbacks.CompletionCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-                if(null!=djiError) {
-                    Log.d("debug",  "连接错误->" + djiError.getDescription());
-                    showTip("连接错误" + djiError.toString());
-                }
-            }
-        });
+//        mFlightController.setFlightOrientationMode(FlightOrientationMode.AIRCRAFT_HEADING, new CommonCallbacks.CompletionCallback() {
+//            @Override
+//            public void onResult(DJIError djiError) {
+//
+//            }
+//        });
 
         mFlightController.setVirtualStickModeEnabled(true, new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
                 if (null == djiError) {
-//                    isEnableStick = true;
                     Log.d("debug", "setVirtualStickModeEnabled success，准备接受Virtual Stick控制");
                     mFlightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
                     mFlightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
@@ -401,6 +399,12 @@ public class CompleteWidgetActivity extends Activity {
 //                原文链接：https://blog.csdn.net/qq_26923265/article/details/82743941
             }
         });
+        mFlightController.getSimulator().start(InitializationData.createInstance(new LocationCoordinate2D(31, 117), 10, 10),
+                new CommonCallbacks.CompletionCallback(){
+                    @Override
+                    public void onResult(DJIError djiError) {
+                    }
+                });
     }
 
     private void disableVirtualStickFlying(){
@@ -411,10 +415,15 @@ public class CompleteWidgetActivity extends Activity {
         mFlightController.setVirtualStickModeEnabled(false, new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
-                if(djiError == null) {
-                    Log.d("debug", "setVirtualStickModeDisabled success， 回到遥控器控制");
-                    isEnableStick = false;
-                }
+                Log.d("debug", "setVirtualStickModeDisabled success， 回到遥控器控制");
+                isEnableStick = false;
+            }
+        });
+        mAsr.stopListening();
+        mFlightController.getSimulator().stop(new CommonCallbacks.CompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+                
             }
         });
     }
@@ -425,11 +434,13 @@ public class CompleteWidgetActivity extends Activity {
         public void run() {
 
             if (mFlightController != null) {
-                mFlightController.sendVirtualStickFlightControlData(mSendData,
+                mFlightController.sendVirtualStickFlightControlData(
+                        new FlightControlData(mPitch, mRoll, mYaw, mThrottle),
                         new CommonCallbacks.CompletionCallback() {
                             @Override
                             public void onResult(DJIError djiError) {
-                                Log.d("debug", "sendVirtualStickFlightControlData success， 指令发送正确"+mSendData);
+                                if(djiError == null)
+                                Log.d("debug", "sendVirtualStickFlightControlData success， 指令发送正确");
                             }
                         }
                 );
@@ -443,29 +454,29 @@ public class CompleteWidgetActivity extends Activity {
      *  rockerZ 杆量比[-1, 1], 上/下(-/+)
      *  rockerRotate 杆量比[-1, 1], 顺时针/逆时针(+/-)旋转
      */
-    private class VirtualStickPB{
-        float rockerX;
-        float rockerY;
-        float rockerZ;
-        float rockerRotation;
-        public VirtualStickPB(float rockerX, float rockerY, float rockerZ, float rockerRotation){
-            this.rockerX = rockerX;
-            this.rockerY = rockerY;
-            this.rockerZ = rockerZ;
-            this.rockerRotation = rockerRotation;
-        }
-    }
+//    private class VirtualStickPB{
+//        float rockerX;
+//        float rockerY;
+//        float rockerZ;
+//        float rockerRotation;
+//        public VirtualStickPB(float rockerX, float rockerY, float rockerZ, float rockerRotation){
+//            this.rockerX = rockerX;
+//            this.rockerY = rockerY;
+//            this.rockerZ = rockerZ;
+//            this.rockerRotation = rockerRotation;
+//        }
+//    }
 
-    private void executeFlying(VirtualStickPB bean) {
+    private void executeFlying(FlightControlData bean) {
         if(mFlightController == null){
             Toast.makeText(getApplicationContext(), "飞机未连接", Toast.LENGTH_LONG).show();
             return;
         }
         if (isEnableStick) {
-            float rockX =  bean.rockerX;
-            float rockY =  bean.rockerY;
-            float rockZ =  bean.rockerZ;
-            float rockerRotation =  bean.rockerRotation;
+            float rockX =  bean.getPitch();
+            float rockY =  bean.getRoll();
+            float rockZ =  bean.getYaw();
+            float rockerRotation =  bean.getVerticalThrottle();
             //Log.e("dispatch", "x = " + rockX + "   y = " + rockY + "  z = " + rockZ+"  rockerRotation = "+rockerRotation);
 
             RollPitchControlMode rollPitchControlMode = mFlightController.getRollPitchControlMode();
@@ -512,7 +523,7 @@ public class CompleteWidgetActivity extends Activity {
                 mYaw = 0;
             }
 
-            mSendData = new FlightControlData(mPitch, mRoll, mYaw, mThrottle);
+//            mSendData = new FlightControlData(mPitch, mRoll, mYaw, mThrottle);
 
             if (null == mSendVirtualStickDataTimer) {
                 mSendVirtualStickDataTask = new SendVirtualStickDataTask();
@@ -529,7 +540,7 @@ public class CompleteWidgetActivity extends Activity {
         mEngineType =  SpeechConstant.TYPE_LOCAL;
         mAsr = SpeechRecognizer.createRecognizer(this, mInitListener);
 //        mLocalLexicon = "张海羊\n刘婧\n王锋\n";        // 初始化语法、命令词
-        mLocalGrammar = FucUtil.readFile(this,"wake.bnf", "utf-8");
+        mLocalGrammar = FucUtil.readFile(this,"command.bnf", "utf-8");
         buildGrammer();
     }
 
@@ -554,13 +565,11 @@ public class CompleteWidgetActivity extends Activity {
     private void listenSpeechCommand(){
         if (!setParam()) {
             showTip("请先构建语法。");
-            Log.d("debug",  "请先构建语法");
             return;
         };
         int ret = mAsr.startListening(mRecognizerListener);
         if (ret != ErrorCode.SUCCESS) {
             showTip("识别失败,错误码: " + ret);
-            Log.d("debug",  "识别失败,错误码: " + ret);
         }
     }
 
@@ -571,7 +580,7 @@ public class CompleteWidgetActivity extends Activity {
 
         @Override
         public void onInit(int code) {
-            Log.d("debug", "SpeechRecognizer init() code = " + code);
+            Log.d(TAG, "SpeechRecognizer init() code = " + code);
             if (code != ErrorCode.SUCCESS) {
                 showTip("初始化失败,错误码："+code);
             }
@@ -613,13 +622,13 @@ public class CompleteWidgetActivity extends Activity {
         @Override
         public void onVolumeChanged(int volume, byte[] data) {
             showTip("当前正在说话，音量大小：" + volume);
-            Log.d("debug", "返回音频数据：" + data.length);
+            Log.d(TAG, "返回音频数据：" + data.length);
         }
 
         @Override
         public void onResult(final RecognizerResult result, boolean isLast) {
             if (null != result && !TextUtils.isEmpty(result.getResultString())) {
-                Log.d("debug", "recognizer result：" + result.getResultString());
+                Log.d(TAG, "recognizer result：" + result.getResultString());
                 String text = "";
                 if (mResultType.equals("json")) {
                     text = JsonParser.parseGrammarResult(result.getResultString(), SpeechConstant.TYPE_LOCAL);
@@ -628,8 +637,9 @@ public class CompleteWidgetActivity extends Activity {
                 }
                 // 显示
                 showTip(text);
+                CommandText.setText(text);
             } else {
-                Log.d("debug", "recognizer result : null");
+                Log.d(TAG, "recognizer result : null");
             }
         }
 
@@ -650,8 +660,7 @@ public class CompleteWidgetActivity extends Activity {
             if (error == null) {
                 showTip("语法识别引擎成功");
             } else {
-                Toast.makeText(getApplicationContext(), "语法识别引擎错误,错误码：" + error.getErrorCode(),Toast.LENGTH_LONG).show();
-//                showTip("语法识别引擎错误,错误码：" + error.getErrorCode());
+                showTip("语法识别引擎成功,错误码：" + error.getErrorCode());
             }
         }
 
@@ -783,7 +792,7 @@ public class CompleteWidgetActivity extends Activity {
         for(int i=0;i<wordList.length;i++){
             if(i==wordList.length-1) {
                 builder.append(wordList[i] );
-                Log.d("debug", "getUpdateInfo: "+wordList[i]);
+                Log.d(TAG, "getUpdateInfo: "+wordList[i]);
             }else{
                 builder.append(wordList[i] + "\n");
             }
