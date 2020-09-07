@@ -23,6 +23,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.PopupMenu;
 import android.widget.TextView;
@@ -63,7 +64,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Popu
                 DJISDKManager.getInstance().startConnectionToProduct();
 
 //                Toast.makeText(getApplicationContext(), "SDK registration succeeded!", Toast.LENGTH_LONG).show();
-                findViewById(R.id.complete_ui_widgets).setBackgroundColor(Color.parseColor("#00DD00"));
+                btnEnter.setBackgroundColor(Color.parseColor("#00DD00"));
+                btnEnter.setText("进入飞行界面");
             } else {
 
                 Toast.makeText(getApplicationContext(),
@@ -147,6 +149,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Popu
     private static final int REQUEST_PERMISSION_CODE = 12345;
     private List<String> missingPermission = new ArrayList<>();
     private EditText bridgeModeEditText;
+    private Button btnEnter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -154,7 +157,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Popu
         setContentView(R.layout.activity_main);
 //        SpeechUtility.createUtility(MainActivity.this, SpeechConstant.APPID +"=5f0f15d5");
         isAppStarted = true;
-        findViewById(R.id.complete_ui_widgets).setOnClickListener(this);
+        btnEnter = findViewById(R.id.complete_ui_widgets);
+        btnEnter.setOnClickListener(this);
         TextView versionText = (TextView) findViewById(R.id.version);
 //        versionText.setText(getResources().getString(R.string.sdk_version, DJISDKManager.getInstance().getSDKVersion()));
         findViewById(R.id.bt_customized_ui_widgets).setOnClickListener(this);

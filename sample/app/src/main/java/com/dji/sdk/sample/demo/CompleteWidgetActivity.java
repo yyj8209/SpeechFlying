@@ -540,7 +540,7 @@ public class CompleteWidgetActivity extends Activity {
         mEngineType =  SpeechConstant.TYPE_LOCAL;
         mAsr = SpeechRecognizer.createRecognizer(this, mInitListener);
 //        mLocalLexicon = "张海羊\n刘婧\n王锋\n";        // 初始化语法、命令词
-        mLocalGrammar = FucUtil.readFile(this,"command.bnf", "utf-8");
+        mLocalGrammar = FucUtil.readFile(this,"wake.bnf", "utf-8");
         buildGrammer();
     }
 
@@ -569,6 +569,7 @@ public class CompleteWidgetActivity extends Activity {
         };
         int ret = mAsr.startListening(mRecognizerListener);
         if (ret != ErrorCode.SUCCESS) {
+            Log.d(TAG,"识别失败,错误码: " + ret);
             showTip("识别失败,错误码: " + ret);
         }
     }
@@ -660,7 +661,8 @@ public class CompleteWidgetActivity extends Activity {
             if (error == null) {
                 showTip("语法识别引擎成功");
             } else {
-                showTip("语法识别引擎成功,错误码：" + error.getErrorCode());
+                Log.d(TAG, "语法识别引擎失败");
+                showTip("语法识别引擎失败,错误码：" + error.getErrorCode());
             }
         }
 
@@ -763,7 +765,7 @@ public class CompleteWidgetActivity extends Activity {
                 // 设置语法构建路径
                 mAsr.setParameter(ResourceUtil.GRM_BUILD_PATH, grmPath);
                 // 设置语法名称
-                mAsr.setParameter(SpeechConstant.GRAMMAR_LIST, "call");
+                mAsr.setParameter(SpeechConstant.GRAMMAR_LIST, "OfflineCommand");
                 // 设置文本编码格式
                 mAsr.setParameter(SpeechConstant.TEXT_ENCODING, "utf-8");
                 //执行更新操作
