@@ -375,7 +375,10 @@ public class CompleteWidgetActivity extends Activity {
         mFlightController.setFlightOrientationMode(FlightOrientationMode.AIRCRAFT_HEADING, new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
-
+                if(null!=djiError) {
+                    Log.d("debug",  "连接错误->" + djiError.getDescription());
+                    showTip("连接错误" + djiError.toString());
+                }
             }
         });
 
@@ -408,8 +411,10 @@ public class CompleteWidgetActivity extends Activity {
         mFlightController.setVirtualStickModeEnabled(false, new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
-                Log.d("debug", "setVirtualStickModeDisabled success， 回到遥控器控制");
-                isEnableStick = false;
+                if(djiError == null) {
+                    Log.d("debug", "setVirtualStickModeDisabled success， 回到遥控器控制");
+                    isEnableStick = false;
+                }
             }
         });
     }
@@ -424,7 +429,7 @@ public class CompleteWidgetActivity extends Activity {
                         new CommonCallbacks.CompletionCallback() {
                             @Override
                             public void onResult(DJIError djiError) {
-//                                Log.d("debug", "sendVirtualStickFlightControlData success， 指令发送正确");
+                                Log.d("debug", "sendVirtualStickFlightControlData success， 指令发送正确"+mSendData);
                             }
                         }
                 );
@@ -524,7 +529,7 @@ public class CompleteWidgetActivity extends Activity {
         mEngineType =  SpeechConstant.TYPE_LOCAL;
         mAsr = SpeechRecognizer.createRecognizer(this, mInitListener);
 //        mLocalLexicon = "张海羊\n刘婧\n王锋\n";        // 初始化语法、命令词
-        mLocalGrammar = FucUtil.readFile(this,"command.bnf", "utf-8");
+        mLocalGrammar = FucUtil.readFile(this,"wake.bnf", "utf-8");
         buildGrammer();
     }
 
@@ -549,11 +554,13 @@ public class CompleteWidgetActivity extends Activity {
     private void listenSpeechCommand(){
         if (!setParam()) {
             showTip("请先构建语法。");
+            Log.d("debug",  "请先构建语法");
             return;
         };
         int ret = mAsr.startListening(mRecognizerListener);
         if (ret != ErrorCode.SUCCESS) {
             showTip("识别失败,错误码: " + ret);
+            Log.d("debug",  "识别失败,错误码: " + ret);
         }
     }
 
@@ -564,7 +571,7 @@ public class CompleteWidgetActivity extends Activity {
 
         @Override
         public void onInit(int code) {
-            Log.d(TAG, "SpeechRecognizer init() code = " + code);
+            Log.d("debug", "SpeechRecognizer init() code = " + code);
             if (code != ErrorCode.SUCCESS) {
                 showTip("初始化失败,错误码："+code);
             }
@@ -606,13 +613,13 @@ public class CompleteWidgetActivity extends Activity {
         @Override
         public void onVolumeChanged(int volume, byte[] data) {
             showTip("当前正在说话，音量大小：" + volume);
-            Log.d(TAG, "返回音频数据：" + data.length);
+            Log.d("debug", "返回音频数据：" + data.length);
         }
 
         @Override
         public void onResult(final RecognizerResult result, boolean isLast) {
             if (null != result && !TextUtils.isEmpty(result.getResultString())) {
-                Log.d(TAG, "recognizer result：" + result.getResultString());
+                Log.d("debug", "recognizer result：" + result.getResultString());
                 String text = "";
                 if (mResultType.equals("json")) {
                     text = JsonParser.parseGrammarResult(result.getResultString(), SpeechConstant.TYPE_LOCAL);
@@ -622,7 +629,7 @@ public class CompleteWidgetActivity extends Activity {
                 // 显示
                 showTip(text);
             } else {
-                Log.d(TAG, "recognizer result : null");
+                Log.d("debug", "recognizer result : null");
             }
         }
 
@@ -643,7 +650,8 @@ public class CompleteWidgetActivity extends Activity {
             if (error == null) {
                 showTip("语法识别引擎成功");
             } else {
-                showTip("语法识别引擎成功,错误码：" + error.getErrorCode());
+                Toast.makeText(getApplicationContext(), "语法识别引擎错误,错误码：" + error.getErrorCode(),Toast.LENGTH_LONG).show();
+//                showTip("语法识别引擎错误,错误码：" + error.getErrorCode());
             }
         }
 
@@ -775,7 +783,7 @@ public class CompleteWidgetActivity extends Activity {
         for(int i=0;i<wordList.length;i++){
             if(i==wordList.length-1) {
                 builder.append(wordList[i] );
-                Log.d(TAG, "getUpdateInfo: "+wordList[i]);
+                Log.d("debug", "getUpdateInfo: "+wordList[i]);
             }else{
                 builder.append(wordList[i] + "\n");
             }

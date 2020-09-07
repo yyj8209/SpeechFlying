@@ -137,7 +137,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Popu
         Manifest.permission.ACCESS_FINE_LOCATION, // Maps
         Manifest.permission.CHANGE_WIFI_STATE, // Changing between WIFI and USB connection
         Manifest.permission.WRITE_EXTERNAL_STORAGE, // Log files
-        Manifest.permission.WRITE_SETTINGS, // Log files
+//        Manifest.permission.WRITE_SETTINGS, // Log files
         Manifest.permission.BLUETOOTH, // Bluetooth connected products
         Manifest.permission.BLUETOOTH_ADMIN, // Bluetooth connected products
         Manifest.permission.READ_EXTERNAL_STORAGE, // Log files
