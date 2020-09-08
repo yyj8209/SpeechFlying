@@ -3,12 +3,15 @@ package com.dji.sdk.sample.demo;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -701,7 +704,7 @@ public class CompleteWidgetActivity extends Activity {
         // 设置返回结果格式
         mAsr.setParameter(SpeechConstant.RESULT_TYPE, mResultType);
         // 设置本地识别使用语法id
-        mAsr.setParameter(SpeechConstant.LOCAL_GRAMMAR, "command");
+        mAsr.setParameter(SpeechConstant.LOCAL_GRAMMAR, "call");
         // 设置识别的门限值
         mAsr.setParameter(SpeechConstant.MIXED_THRESHOLD, "30");
         // 使用8k音频的时候请解开注释
@@ -765,7 +768,7 @@ public class CompleteWidgetActivity extends Activity {
                 // 设置语法构建路径
                 mAsr.setParameter(ResourceUtil.GRM_BUILD_PATH, grmPath);
                 // 设置语法名称
-                mAsr.setParameter(SpeechConstant.GRAMMAR_LIST, "OfflineCommand");
+                mAsr.setParameter(SpeechConstant.GRAMMAR_LIST, "call");
                 // 设置文本编码格式
                 mAsr.setParameter(SpeechConstant.TEXT_ENCODING, "utf-8");
                 //执行更新操作
