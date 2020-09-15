@@ -3,12 +3,15 @@ package com.dji.sdk.sample.demo;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -769,7 +772,7 @@ public class CompleteWidgetActivity extends Activity {
                 // 设置语法构建路径
                 mAsr.setParameter(ResourceUtil.GRM_BUILD_PATH, grmPath);
                 // 设置语法名称
-                mAsr.setParameter(SpeechConstant.GRAMMAR_LIST, "OfflineCommand");
+                mAsr.setParameter(SpeechConstant.GRAMMAR_LIST, "call");
                 // 设置文本编码格式
                 mAsr.setParameter(SpeechConstant.TEXT_ENCODING, "utf-8");
                 //执行更新操作

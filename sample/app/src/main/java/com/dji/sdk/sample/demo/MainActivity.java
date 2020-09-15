@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,6 +15,8 @@ import android.preference.PreferenceManager;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
+import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -218,6 +221,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Popu
      * Checks if there is any missing permissions, and
      * requests runtime permission if needed.
      */
+    private final int REQUEST_CODE_WRITE_SETTINGS = 1001;
     private void checkAndRequestPermissions() {
         // Check for permissions
         for (String eachPermission : REQUIRED_PERMISSION_LIST) {
@@ -233,6 +237,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Popu
                                               missingPermission.toArray(new String[missingPermission.size()]),
                                               REQUEST_PERMISSION_CODE);
         }
+        requestWriteSettings();
     }
 
     /**
@@ -267,6 +272,42 @@ public class MainActivity extends Activity implements View.OnClickListener, Popu
                     DJISDKManager.getInstance().registerApp(MainActivity.this, registrationCallback);
                 }
             });
+        }
+    }
+    /**
+     * 申请权限
+     */
+    private void requestWriteSettings()
+    {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+        {
+            //大于等于23 请求权限
+            if ( !Settings.System.canWrite(getApplicationContext()))
+            {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
+                intent.setData(Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, REQUEST_CODE_WRITE_SETTINGS );
+            }
+        }else{
+            //小于23直接设置
+        }
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_WRITE_SETTINGS)
+        {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            {
+                //Settings.System.canWrite方法检测授权结果
+                if (Settings.System.canWrite(getApplicationContext()))
+                {
+                    Toast.makeText(getApplicationContext(),"获取了权限",Toast.LENGTH_SHORT).show();
+                }else{
+                    Toast.makeText(getApplicationContext(),"您拒绝了权限",Toast.LENGTH_SHORT).show();;
+                }
+            }
         }
     }
 
