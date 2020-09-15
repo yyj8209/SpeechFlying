@@ -73,6 +73,7 @@ import dji.ux.widget.controls.CameraControlsWidget;
 public class CompleteWidgetActivity extends Activity {
 
     private static final String TAG = "CompleteWidgetActivity";
+    private static final String TAG_DEBUG = "debug";
 
     private MapWidget mapWidget;
     private ViewGroup parentView;
@@ -539,8 +540,10 @@ public class CompleteWidgetActivity extends Activity {
     private void initSpeechEngine(){
         mEngineType =  SpeechConstant.TYPE_LOCAL;
         mAsr = SpeechRecognizer.createRecognizer(this, mInitListener);
-//        mLocalLexicon = "张海羊\n刘婧\n王锋\n";        // 初始化语法、命令词
-        mLocalGrammar = FucUtil.readFile(this,"wake.bnf", "utf-8");
+        if(mAsr==null){
+            Log.d(TAG_DEBUG,"mAsr is null");
+        }
+        mLocalGrammar = FucUtil.readFile(this,"call.bnf", "utf-8");
         buildGrammer();
     }
 
@@ -559,6 +562,8 @@ public class CompleteWidgetActivity extends Activity {
         int ret = mAsr.buildGrammar(GRAMMAR_TYPE_BNF, mLocalGrammar, grammarListener);
         if(ret != ErrorCode.SUCCESS){
             showTip("语法构建失败,错误码：" + ret);
+        }else{
+            Log.d(TAG_DEBUG,"语法构建成功");
         }
     }
 
@@ -569,7 +574,7 @@ public class CompleteWidgetActivity extends Activity {
         };
         int ret = mAsr.startListening(mRecognizerListener);
         if (ret != ErrorCode.SUCCESS) {
-            Log.d(TAG,"识别失败,错误码: " + ret);
+            Log.d(TAG_DEBUG,"识别失败,错误码: " + ret);
             showTip("识别失败,错误码: " + ret);
         }
     }
@@ -623,13 +628,13 @@ public class CompleteWidgetActivity extends Activity {
         @Override
         public void onVolumeChanged(int volume, byte[] data) {
             showTip("当前正在说话，音量大小：" + volume);
-            Log.d(TAG, "返回音频数据：" + data.length);
+            Log.d(TAG_DEBUG, "返回音频数据：" + data.length);
         }
 
         @Override
         public void onResult(final RecognizerResult result, boolean isLast) {
             if (null != result && !TextUtils.isEmpty(result.getResultString())) {
-                Log.d(TAG, "recognizer result：" + result.getResultString());
+                Log.d(TAG_DEBUG, "recognizer result：" + result.getResultString());
                 String text = "";
                 if (mResultType.equals("json")) {
                     text = JsonParser.parseGrammarResult(result.getResultString(), SpeechConstant.TYPE_LOCAL);
@@ -637,23 +642,23 @@ public class CompleteWidgetActivity extends Activity {
                     text = XmlParser.parseNluResult(result.getResultString());
                 }
                 // 显示
-                showTip(text);
                 CommandText.setText(text);
+//                Log.d(TAG_DEBUG, "recognizer result"+result.getResultString());
             } else {
-                Log.d(TAG, "recognizer result : null");
+                Log.d(TAG_DEBUG, "recognizer result : null");
             }
         }
 
         @Override
         public void onEndOfSpeech() {
             // 此回调表示：检测到了语音的尾端点，已经进入识别过程，不再接受语音输入
-            showTip("结束说话");
+            Log.d(TAG_DEBUG, "结束说话");
         }
 
         @Override
         public void onBeginOfSpeech() {
             // 此回调表示：sdk内部录音机已经准备好了，用户可以开始语音输入
-            showTip("开始说话");
+            Log.d(TAG_DEBUG, "开始说话");
         }
 
         @Override
@@ -661,8 +666,7 @@ public class CompleteWidgetActivity extends Activity {
             if (error == null) {
                 showTip("语法识别引擎成功");
             } else {
-                Log.d(TAG, "语法识别引擎失败");
-                showTip("语法识别引擎失败,错误码：" + error.getErrorCode());
+                Log.d(TAG_DEBUG, "语法识别引擎失败,错误码：" + error.getErrorCode());
             }
         }
 
@@ -701,7 +705,7 @@ public class CompleteWidgetActivity extends Activity {
         // 设置返回结果格式
         mAsr.setParameter(SpeechConstant.RESULT_TYPE, mResultType);
         // 设置本地识别使用语法id
-        mAsr.setParameter(SpeechConstant.LOCAL_GRAMMAR, "command");
+        mAsr.setParameter(SpeechConstant.LOCAL_GRAMMAR, "call");
         // 设置识别的门限值
         mAsr.setParameter(SpeechConstant.MIXED_THRESHOLD, "30");
         // 使用8k音频的时候请解开注释
