@@ -3,15 +3,9 @@ package com.dji.sdk.sample.demo;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.IBinder;
-import android.os.RemoteException;
-import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -30,11 +24,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
-import com.dji.sdk.sample.demo.util.JsonParser;
-import com.dji.sdk.sample.demo.util.FucUtil;
-import com.dji.sdk.sample.demo.util.XmlParser;
-import com.dji.mapkit.core.maps.DJIMap;
-import com.dji.mapkit.core.models.DJILatLng;
+import androidx.appcompat.app.AlertDialog;
 import com.iflytek.cloud.ErrorCode;
 import com.iflytek.cloud.InitListener;
 import com.iflytek.cloud.SpeechConstant;
@@ -49,7 +39,11 @@ import com.iflytek.cloud.RecognizerResult;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import androidx.appcompat.app.AlertDialog;
+import com.dji.sdk.sample.demo.util.JsonParser;
+import com.dji.sdk.sample.demo.util.FucUtil;
+import com.dji.sdk.sample.demo.util.XmlParser;
+import com.dji.mapkit.core.maps.DJIMap;
+import com.dji.mapkit.core.models.DJILatLng;
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.FlightOrientationMode;
 import dji.common.flightcontroller.simulator.InitializationData;
@@ -65,10 +59,8 @@ import dji.keysdk.CameraKey;
 import dji.keysdk.KeyManager;
 import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.products.Aircraft;
-import dji.ux.internal.SwitchButton;
 import dji.ux.widget.FPVWidget;
 import dji.ux.widget.MapWidget;
-import dji.ux.widget.controls.CameraControlsWidget;
 
 /**
  * Activity that shows all the UI elements together
@@ -162,17 +154,24 @@ public class CompleteWidgetActivity extends Activity {
         // 语音控制部分的初始化
         mToast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
 
-        initSpeechEngine();
         switchFlyMethod = (Switch)findViewById(R.id.fly_method);
         switchFlyMethod.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if(isChecked) {
-//                    enableVirtualStickFlying();
+                    enableVirtualStickFlying();
+                    initSpeechEngine();
                     listenSpeechCommand();
+                }else {
+                    disableVirtualStickFlying();
+                    mAsr.stopListening();
+                    // 释放语音引擎
+                    if( null != mAsr ){
+                        mAsr.cancel();
+                        mAsr.destroy();
+                    }
+                    Log.d(TAG_DEBUG, "停止监听语音");
                 }
-//                else
-//                    disableVirtualStickFlying();
             }
         });
     }
@@ -378,12 +377,12 @@ public class CompleteWidgetActivity extends Activity {
             Toast.makeText(getApplicationContext(), "飞机未连接", Toast.LENGTH_LONG).show();
             return;
         }
-//        mFlightController.setFlightOrientationMode(FlightOrientationMode.AIRCRAFT_HEADING, new CommonCallbacks.CompletionCallback() {
-//            @Override
-//            public void onResult(DJIError djiError) {
-//
-//            }
-//        });
+        mFlightController.setFlightOrientationMode(FlightOrientationMode.AIRCRAFT_HEADING, new CommonCallbacks.CompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+
+            }
+        });
 
         mFlightController.setVirtualStickModeEnabled(true, new CommonCallbacks.CompletionCallback() {
             @Override
@@ -396,7 +395,7 @@ public class CompleteWidgetActivity extends Activity {
                     mFlightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
                     isEnableStick = true;
                 } else {
-                    Log.d("debug",  "error = " + djiError.getDescription());
+                    Log.d(TAG_DEBUG,  "error = " + djiError.getDescription());
                 }
 //————————————————
 //                版权声明：本文为CSDN博主「风之子磊505057618」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
@@ -419,15 +418,17 @@ public class CompleteWidgetActivity extends Activity {
         mFlightController.setVirtualStickModeEnabled(false, new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
+                if(null!=djiError){
                 Log.d("debug", "setVirtualStickModeDisabled success， 回到遥控器控制");
                 isEnableStick = false;
+                }
             }
         });
-        mAsr.stopListening();
+//        mAsr.stopListening();
         mFlightController.getSimulator().stop(new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
-                
+
             }
         });
     }
@@ -444,7 +445,7 @@ public class CompleteWidgetActivity extends Activity {
                             @Override
                             public void onResult(DJIError djiError) {
                                 if(djiError == null)
-                                Log.d("debug", "sendVirtualStickFlightControlData success， 指令发送正确");
+                                Log.d("debug", "SendVirtualStickDataTask  指令：mPitch"+mPitch);
                             }
                         }
                 );
@@ -453,35 +454,23 @@ public class CompleteWidgetActivity extends Activity {
     }
 
     /**
-     *  rockerX 杆量比[-1, 1], 前/后(+/-)
-     *  rockerY 杆量比[-1, 1], 左/右(-/+)
-     *  rockerZ 杆量比[-1, 1], 上/下(-/+)
-     *  rockerRotate 杆量比[-1, 1], 顺时针/逆时针(+/-)旋转
+     *  FlightControlData 结构：
+     *  rockerPitch 杆量比[-1, 1], 前/后(+/-)
+     *  rockerRoll 杆量比[-1, 1], 左/右(-/+)
+     *  rockerYaw 杆量比[-1, 1], 顺时针/逆时针(+/-)旋转
+     *  rockerThrottle 杆量比[-1, 1], 上/下(-/+)
      */
-//    private class VirtualStickPB{
-//        float rockerX;
-//        float rockerY;
-//        float rockerZ;
-//        float rockerRotation;
-//        public VirtualStickPB(float rockerX, float rockerY, float rockerZ, float rockerRotation){
-//            this.rockerX = rockerX;
-//            this.rockerY = rockerY;
-//            this.rockerZ = rockerZ;
-//            this.rockerRotation = rockerRotation;
-//        }
-//    }
-
     private void executeFlying(FlightControlData bean) {
         if(mFlightController == null){
             Toast.makeText(getApplicationContext(), "飞机未连接", Toast.LENGTH_LONG).show();
             return;
         }
         if (isEnableStick) {
-            float rockX =  bean.getPitch();
-            float rockY =  bean.getRoll();
-            float rockZ =  bean.getYaw();
-            float rockerRotation =  bean.getVerticalThrottle();
-            //Log.e("dispatch", "x = " + rockX + "   y = " + rockY + "  z = " + rockZ+"  rockerRotation = "+rockerRotation);
+            float rockPitch =  bean.getPitch();
+            float rockRoll =  bean.getRoll();
+            float rockYaw =  bean.getYaw();
+            float rockerThrottle =  bean.getVerticalThrottle();
+            //Log.e("dispatch", "x = " + rockPitch + "   y = " + rockRoll + "  z = " + rockYaw+"  rockerRotation = "+rockerRotation);
 
             RollPitchControlMode rollPitchControlMode = mFlightController.getRollPitchControlMode();
             VerticalControlMode verticalControlMode = mFlightController.getVerticalControlMode();
@@ -489,14 +478,14 @@ public class CompleteWidgetActivity extends Activity {
 
             if (rollPitchControlMode == RollPitchControlMode.VELOCITY) {
                 // 前/后
-                mRoll = rockX * Limits.ROLL_PITCH_CONTROL_MAX_VELOCITY;
+                mRoll = rockPitch * Limits.ROLL_PITCH_CONTROL_MAX_VELOCITY;
                 // 左/右
-                mPitch = rockY * Limits.ROLL_PITCH_CONTROL_MAX_VELOCITY;
+                mPitch = rockRoll * Limits.ROLL_PITCH_CONTROL_MAX_VELOCITY;
             } else if (rollPitchControlMode == RollPitchControlMode.ANGLE) {
                 // 前/后
-                mPitch = -rockX * Limits.ROLL_PITCH_CONTROL_MAX_ANGLE;
+                mPitch = -rockPitch * Limits.ROLL_PITCH_CONTROL_MAX_ANGLE;
                 // 左/右
-                mRoll = rockY * Limits.ROLL_PITCH_CONTROL_MAX_ANGLE;
+                mRoll = rockRoll * Limits.ROLL_PITCH_CONTROL_MAX_ANGLE;
             } else {
                 mPitch = 0;
                 mRoll = 0;
@@ -504,11 +493,11 @@ public class CompleteWidgetActivity extends Activity {
 
             if (verticalControlMode == VerticalControlMode.VELOCITY) {
                 // 上/下
-                mThrottle = -rockZ * Limits.VERTICAL_CONTROL_MAX_VELOCITY;
+                mThrottle = rockerThrottle * Limits.VERTICAL_CONTROL_MAX_VELOCITY;
             } else if (verticalControlMode == VerticalControlMode.POSITION) {
                 // 上/下
-                if (rockZ >= 0) {
-                    mThrottle = rockZ * Limits.VERTICAL_CONTROL_MAX_HEIGHT;
+                if (rockYaw >= 0) {
+                    mThrottle = rockerThrottle * Limits.VERTICAL_CONTROL_MAX_HEIGHT;
                 } else {
                     mThrottle = 0;
                     //mThrottle = controller.getCurrentState().getAircraftLocation().getAltitude();
@@ -519,10 +508,10 @@ public class CompleteWidgetActivity extends Activity {
 
             if (yawControlMode == YawControlMode.ANGULAR_VELOCITY) {
                 // 旋转
-                mYaw = rockerRotation * Limits.YAW_CONTROL_MAX_ANGULAR_VELOCITY;
+                mYaw = rockYaw * Limits.YAW_CONTROL_MAX_ANGULAR_VELOCITY;
             } else if (yawControlMode == YawControlMode.ANGLE) {
                 // 旋转
-                mYaw = rockerRotation * Limits.YAW_CONTROL_MAX_ANGLE;
+                mYaw = rockYaw * Limits.YAW_CONTROL_MAX_ANGLE;
             } else {
                 mYaw = 0;
             }
@@ -538,16 +527,50 @@ public class CompleteWidgetActivity extends Activity {
             Log.d("debug", "isenablestick = false");
         }
     }
+    // 把接收到命令转化为杆量。
+    private FlightControlData cmdToControlData( String cmdText) {
+        FlightControlData fcd;
+        if(cmdText.contains("上"))
+            fcd = new FlightControlData(0.0f,0.0f,0.0f,0.5f);
+        else if(cmdText.contains("下"))
+            fcd = new FlightControlData(0.0f,0.0f,0.0f,-0.5f);
+        else if(cmdText.contains("前"))
+            fcd = new FlightControlData(0.5f,0.0f,0.0f,0.0f);
+        else if(cmdText.contains("后"))
+            fcd = new FlightControlData(-0.5f,0.0f,0.0f,-0.0f);
+        else if(cmdText.contains("左")) {
+            fcd = new FlightControlData(0.0f, -0.5f, 0.0f, 0.0f);
+            if(cmdText.contains("转"))
+                fcd = new FlightControlData(0.0f, 0.0f, -0.5f, 0.0f);
+        }
+        else if(cmdText.contains("右")) {
+            fcd = new FlightControlData(0.0f, 0.5f, 0.0f, -0.0f);
+            if(cmdText.contains("转"))
+                fcd = new FlightControlData(0.0f, 0.0f, 0.5f, 0.0f);
+        }
+        else if(cmdText.contains("停"))
+            fcd = new FlightControlData(0.0f,0.0f,0.0f,0.0f);
+        else
+            fcd = new FlightControlData(0.0f,0.0f,0.0f,0.0f);
 
-    // 语音识别部分
+        Log.d("debug", "遥杆数据="+fcd.toString());
+
+        return fcd;
+
+    }
+        // 语音识别部分
     private void initSpeechEngine(){
         mEngineType =  SpeechConstant.TYPE_LOCAL;
         mAsr = SpeechRecognizer.createRecognizer(this, mInitListener);
         if(mAsr==null){
             Log.d(TAG_DEBUG,"mAsr is null");
         }
-        mLocalGrammar = FucUtil.readFile(this,"call.bnf", "utf-8");
+        mLocalGrammar = FucUtil.readFile(this, "call.bnf", "utf-8");
         buildGrammer();
+        if (!setParam()) {
+            showTip("请先构建语法。");
+            return;
+        };
     }
 
     private void buildGrammer(){
@@ -563,18 +586,15 @@ public class CompleteWidgetActivity extends Activity {
         // 设置资源路径
         mAsr.setParameter(ResourceUtil.ASR_RES_PATH, getResourcePath());
         int ret = mAsr.buildGrammar(GRAMMAR_TYPE_BNF, mLocalGrammar, grammarListener);
-        if(ret != ErrorCode.SUCCESS){
-            showTip("语法构建失败,错误码：" + ret);
-        }else{
-            Log.d(TAG_DEBUG,"语法构建成功");
-        }
+//        if(ret != ErrorCode.SUCCESS){
+//            showTip("语法构建失败,错误码：" + ret);
+//        }else{
+//            Log.d(TAG_DEBUG,"语法构建成功");
+//        }
     }
 
     private void listenSpeechCommand(){
-        if (!setParam()) {
-            showTip("请先构建语法。");
-            return;
-        };
+
         int ret = mAsr.startListening(mRecognizerListener);
         if (ret != ErrorCode.SUCCESS) {
             Log.d(TAG_DEBUG,"识别失败,错误码: " + ret);
@@ -637,19 +657,22 @@ public class CompleteWidgetActivity extends Activity {
         @Override
         public void onResult(final RecognizerResult result, boolean isLast) {
             if (null != result && !TextUtils.isEmpty(result.getResultString())) {
-                Log.d(TAG_DEBUG, "recognizer result：" + result.getResultString());
+//                Log.d(TAG_DEBUG, "recognizer result：" + result.getResultString());
                 String text = "";
                 if (mResultType.equals("json")) {
-                    text = JsonParser.parseGrammarResult(result.getResultString(), SpeechConstant.TYPE_LOCAL);
+//                    text = JsonParser.parseGrammarResult(result.getResultString(), SpeechConstant.TYPE_LOCAL);
+                    text = JsonParser.parseIatResult(result.getResultString());
                 } else if (mResultType.equals("xml")) {
                     text = XmlParser.parseNluResult(result.getResultString());
                 }
                 // 显示
-                CommandText.setText(text);
-//                Log.d(TAG_DEBUG, "recognizer result"+result.getResultString());
+                CommandText.setText("【执行】"+text);
+                executeFlying(cmdToControlData(text));
+                Log.d(TAG_DEBUG, "recognizer result"+result.getResultString());
             } else {
                 Log.d(TAG_DEBUG, "recognizer result : null");
             }
+            listenSpeechCommand();
         }
 
         @Override
@@ -666,10 +689,10 @@ public class CompleteWidgetActivity extends Activity {
 
         @Override
         public void onError(SpeechError error)  {
-            if (error == null) {
-                showTip("语法识别引擎成功");
-            } else {
-                Log.d(TAG_DEBUG, "语法识别引擎失败,错误码：" + error.getErrorCode());
+            if (error != null)  {
+                Log.d(TAG_DEBUG, "命令不清楚，请重复。");
+                listenSpeechCommand();
+//                Log.d(TAG_DEBUG, "语法识别引擎失败,错误码：" + error.getErrorCode());
             }
         }
 

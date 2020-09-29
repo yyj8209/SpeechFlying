@@ -1,12 +1,11 @@
 #BNF+IAT 1.0 UTF-8;
 !grammar call;
 !slot <contact>;
-!slot <callPre>;
 !slot <callPhone>;
 !slot <callTo>;
+
 !start <callStart>;
-<callStart>:[<callPre>][<callTo>]<contact><callPhone>|[<callPre>]<callPhone>[<callTo>]<contact>;
-<contact>:张海洋;
-<callPre>:我要|我想|我想要;
-<callPhone>:打电话;
-<callTo>:给;
+<callStart>:[<callTo>]<contact>[<callPhone>];
+<contact>:上|下|前|后|左|右|停;
+<callPhone>:飞|转|升|降;
+<callTo>:往|朝|向;

@@ -1,0 +1,16 @@
+#BNF+IAT 1.0 UTF-8;
+!grammar ctrlCmd;
+!slot <want>;
+!slot <vel>;
+!slot <direct>;
+!slot <direction>;
+!slot <fly>;
+
+!start <startCmd>;
+<startCmd>:[<want>][<vel>][<direct>]<direction>[<fly>];
+<want>:我要|我想|我想要;
+<vel>:快速|快点|慢速|缓慢;
+<direct>向|往|朝;
+<direction>:上|下|前|后|左|右|上面|下面|前面|后面|左面|右面|上方|下方|前方|后方|左方|右方;
+<fly>:飞|转|升|降;
+
