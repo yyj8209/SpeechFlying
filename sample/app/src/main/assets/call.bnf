@@ -3,9 +3,13 @@
 !slot <contact>;
 !slot <callPhone>;
 !slot <callTo>;
+!slot <hover>;
+!slot <takeoffLand>;
 
 !start <callStart>;
-<callStart>:[<callTo>]<contact>[<callPhone>];
-<contact>:上|下|前|后|左|右|停;
+<callStart>:[<callTo>]<contact>[<callPhone>]|<hover>|<takeoffLand>;
+<contact>:上|下|前|后|左|右;
 <callPhone>:飞|转|升|降;
-<callTo>:往|朝|向;
+<callTo>:往|向;
+<hover>：停|停止|悬停;
+<takeoffLand>:起飞|降落|回来;

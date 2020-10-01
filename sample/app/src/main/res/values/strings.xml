@@ -25,6 +25,7 @@
     <string name="set_fpv_size">Resize</string>
     <string name="sdk_version">Version: %1$s</string>
     <string name="title">智能飞行APP</string>
+    <string name="registering">正在注册，请稍等……</string>
     <string name="wsbridge_ip">飞行训练教研室</string>
     <string name="provider_google_maps">Google Maps</string>
     <string name="provider_here_maps">Here Maps</string>
@@ -46,7 +47,7 @@
     <string name="sync">Sync</string>
     <string name="speech_fly">语音控制</string>
     <string name="remote_fly">遥控飞行</string>
-    <string name="fly_command">等待接受命令</string>
+    <string name="fly_command">等待命令</string>
     <string-array name="iconArray">
         <item>Aircraft</item>
         <item>Home</item>

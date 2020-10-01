@@ -165,11 +165,11 @@
     <!-- Everything below this line will appear on top of the full-screen map widget -->
     <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_height="100dp"
+        android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_below="@id/camera"
-        android:layout_marginTop="20dp"
-        android:background="@color/dark_gray"
+        android:layout_margin="5dp"
+        android:background="@drawable/shape_corner"
         android:orientation="vertical">
         <Switch
             android:id="@+id/fly_method"
@@ -188,7 +188,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/tv_command"
-            android:layout_marginTop="10dp"
+            android:paddingBottom="10dp"
+            android:gravity="center"
             android:text="@string/fly_command"
         />
     </LinearLayout>

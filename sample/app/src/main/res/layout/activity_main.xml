@@ -39,7 +39,7 @@
         android:padding="16dp"
         android:textStyle="bold"
         android:textColor="@color/white"
-        android:text="正在注册，请稍等……"/>
+        android:text="@string/registering"/>
 
 
     <TableRow
@@ -51,15 +51,16 @@
         android:id="@+id/edittext_bridge_ip"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="10dp"
+        android:layout_margin="30dp"
         android:background="@color/gray"
         android:digits="0123456789.\n"
         android:gravity="center"
         android:hint="@string/wsbridge_ip"
+        android:enabled="false"
         android:imeOptions="actionDone"
         android:maxLength="15"
         android:maxLines="1"
-        android:padding="2dp"
+        android:padding="5dp"
         android:visibility="visible"
         android:textColor="@color/white"
         android:textColorHint="@android:color/white"

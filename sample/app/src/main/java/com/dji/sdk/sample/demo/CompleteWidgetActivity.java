@@ -101,6 +101,7 @@ public class CompleteWidgetActivity extends Activity {
     private String groupName;
     private String groupInfo;
     private TextView CommandText;
+    private boolean bSendCmd;
 
     @SuppressLint("ShowToast")
     @Override
@@ -518,10 +519,10 @@ public class CompleteWidgetActivity extends Activity {
 
 //            mSendData = new FlightControlData(mPitch, mRoll, mYaw, mThrottle);
 
-            if (null == mSendVirtualStickDataTimer) {
+            if (null == mSendVirtualStickDataTimer && bSendCmd) {
                 mSendVirtualStickDataTask = new SendVirtualStickDataTask();
                 mSendVirtualStickDataTimer = new Timer();
-                mSendVirtualStickDataTimer.schedule(mSendVirtualStickDataTask, 100, 200);
+                mSendVirtualStickDataTimer.schedule(mSendVirtualStickDataTask, 0, 200);
             }
         } else {
             Log.d("debug", "isenablestick = false");
@@ -529,36 +530,77 @@ public class CompleteWidgetActivity extends Activity {
     }
     // 把接收到命令转化为杆量。
     private FlightControlData cmdToControlData( String cmdText) {
+        float vel = 0.3f;
+        bSendCmd = true;
         FlightControlData fcd;
         if(cmdText.contains("上"))
-            fcd = new FlightControlData(0.0f,0.0f,0.0f,0.5f);
+            fcd = new FlightControlData(0.0f,0.0f,0.0f,vel);
         else if(cmdText.contains("下"))
-            fcd = new FlightControlData(0.0f,0.0f,0.0f,-0.5f);
+            fcd = new FlightControlData(0.0f,0.0f,0.0f,-vel);
         else if(cmdText.contains("前"))
-            fcd = new FlightControlData(0.5f,0.0f,0.0f,0.0f);
+            fcd = new FlightControlData(vel,0.0f,0.0f,0.0f);
         else if(cmdText.contains("后"))
-            fcd = new FlightControlData(-0.5f,0.0f,0.0f,-0.0f);
+            fcd = new FlightControlData(-vel,0.0f,0.0f,-0.0f);
         else if(cmdText.contains("左")) {
-            fcd = new FlightControlData(0.0f, -0.5f, 0.0f, 0.0f);
+            fcd = new FlightControlData(0.0f, -vel, 0.0f, 0.0f);
             if(cmdText.contains("转"))
-                fcd = new FlightControlData(0.0f, 0.0f, -0.5f, 0.0f);
+                fcd = new FlightControlData(0.0f, 0.0f, -vel, 0.0f);
         }
         else if(cmdText.contains("右")) {
-            fcd = new FlightControlData(0.0f, 0.5f, 0.0f, -0.0f);
+            fcd = new FlightControlData(0.0f, vel, 0.0f, -0.0f);
             if(cmdText.contains("转"))
-                fcd = new FlightControlData(0.0f, 0.0f, 0.5f, 0.0f);
+                fcd = new FlightControlData(0.0f, 0.0f, vel, 0.0f);
         }
         else if(cmdText.contains("停"))
             fcd = new FlightControlData(0.0f,0.0f,0.0f,0.0f);
+        else if(cmdText.contains("起飞")) {
+            bSendCmd = false;
+            fcd = new FlightControlData(0.0f, 0.0f, 0.0f, 0.0f);
+            takeOff();
+        }
+        else if(cmdText.contains("降落")) {
+            bSendCmd = false;
+            fcd = new FlightControlData(0.0f, 0.0f, 0.0f, 0.0f);
+            landing();
+        }
         else
             fcd = new FlightControlData(0.0f,0.0f,0.0f,0.0f);
 
-        Log.d("debug", "遥杆数据="+fcd.toString());
+//        Log.d("debug", "遥杆数据="+fcd.toString());
 
         return fcd;
-
     }
-        // 语音识别部分
+
+    private void takeOff(){
+        if (mFlightController != null){
+            mFlightController.startTakeoff(
+                new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        if (djiError != null) {
+                            Log.d("debug", djiError.getDescription());
+                        }
+                    }
+                }
+            );
+        }
+    }
+    private void landing(){
+        if (mFlightController != null){
+            mFlightController.startLanding(
+                new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        if (djiError != null) {
+                            Log.d("debug", djiError.getDescription());
+                        }
+                    }
+                }
+            );
+        }
+    }
+
+    // 语音识别部分
     private void initSpeechEngine(){
         mEngineType =  SpeechConstant.TYPE_LOCAL;
         mAsr = SpeechRecognizer.createRecognizer(this, mInitListener);
