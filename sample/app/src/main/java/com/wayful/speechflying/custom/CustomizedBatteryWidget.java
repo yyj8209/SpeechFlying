@@ -1,4 +1,4 @@
-package com.dji.sdk.sample.demo.custom;
+package com.wayful.speechflying.custom;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -7,7 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import com.dji.sdk.sample.demo.R;
+import com.wayful.speechflying.R;
 
 import dji.ux.model.base.BaseDynamicWidgetAppearances;
 import dji.ux.widget.BatteryWidget;

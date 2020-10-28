@@ -1,4 +1,4 @@
-package com.dji.sdk.sample.demo;
+package com.wayful.speechflying;
 
 import android.app.Activity;
 import android.os.Bundle;

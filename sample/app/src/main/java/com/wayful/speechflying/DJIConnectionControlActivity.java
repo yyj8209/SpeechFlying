@@ -1,4 +1,4 @@
-package com.dji.sdk.sample.demo;
+package com.wayful.speechflying;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -12,7 +12,7 @@ import android.view.View;
  */
 public class DJIConnectionControlActivity extends Activity {
 
-    public static final String ACCESSORY_ATTACHED = "com.dji.sdk.sample.demo.ACCESSORY_ATTACHED";
+    public static final String ACCESSORY_ATTACHED = "com.wayful.speechflying.ACCESSORY_ATTACHED";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

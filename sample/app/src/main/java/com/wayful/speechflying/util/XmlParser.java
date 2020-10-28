@@ -1,4 +1,4 @@
-package com.dji.sdk.sample.demo.util;
+package com.wayful.speechflying.util;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

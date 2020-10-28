@@ -8,10 +8,11 @@ android {
     compileSdkVersion 28
     buildToolsVersion '28.0.3'
     defaultConfig {
-        applicationId "com.dji.sdk.sample.demo"
+        applicationId "com.wayful.speechflying"
         minSdkVersion 23
         targetSdkVersion 28
         multiDexEnabled true
+        useLibrary 'org.apache.http.legacy'
         vectorDrawables.useSupportLibrary = true
         ndk {
             // On x86 devices that run Android API 23 or above, if the application is targeted with API 23 or

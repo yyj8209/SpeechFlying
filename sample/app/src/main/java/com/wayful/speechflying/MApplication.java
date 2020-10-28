@@ -1,4 +1,4 @@
-package com.dji.sdk.sample.demo;
+package com.wayful.speechflying;
 
 import android.app.Application;
 import android.content.BroadcastReceiver;
@@ -14,7 +14,7 @@ import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.products.Aircraft;
 import dji.sdk.sdkmanager.DJISDKManager;
 
-import static com.dji.sdk.sample.demo.DJIConnectionControlActivity.ACCESSORY_ATTACHED;
+import static com.wayful.speechflying.DJIConnectionControlActivity.ACCESSORY_ATTACHED;
 
 public class MApplication extends Application {
 

@@ -1,4 +1,4 @@
-package com.dji.sdk.sample.demo;
+package com.wayful.speechflying;
 
 import android.Manifest;
 import android.app.Activity;
@@ -20,6 +20,7 @@ import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -62,7 +63,9 @@ public class MainActivity extends Activity implements  PopupMenu.OnMenuItemClick
         @Override
         public void onRegister(DJIError error) {
             isRegistrationInProgress.set(false);
+            Log.d(TAG,"Excuting SDKManagerCallback...");
             if (error == DJISDKError.REGISTRATION_SUCCESS) {
+                Log.d(TAG,"Excuting REGISTRATION_SUCCESS...");
                 loginAccount();
                 DJISDKManager.getInstance().startConnectionToProduct();
 

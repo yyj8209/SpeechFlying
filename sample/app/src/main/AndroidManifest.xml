@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.dji.sdk.sample.demo">
+    package="com.wayful.speechflying">
 
     <!-- DJI SDK need these permissions -->
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -22,6 +22,7 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:usesCleartextTraffic="true"
         android:supportsRtl="true"
         tools:replace="android:label, android:theme"
         android:theme="@style/AppTheme"
@@ -33,7 +34,7 @@
 
         <meta-data
             android:name="com.dji.sdk.API_KEY"
-            android:value="fbac008a5f3c8d0c73a8dbe1" />
+            android:value="03397ec2048c1811f3d8ad86" />
 
 <!--        &lt;!&ndash; Here Maps &ndash;&gt;-->
 <!--        <meta-data android:name="com.here.android.maps.appid"-->

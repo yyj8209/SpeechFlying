@@ -1,4 +1,4 @@
-package com.dji.sdk.sample.demo;
+package com.wayful.speechflying;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -39,9 +39,9 @@ import com.iflytek.cloud.RecognizerResult;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import com.dji.sdk.sample.demo.util.JsonParser;
-import com.dji.sdk.sample.demo.util.FucUtil;
-import com.dji.sdk.sample.demo.util.XmlParser;
+import com.wayful.speechflying.util.JsonParser;
+import com.wayful.speechflying.util.FucUtil;
+import com.wayful.speechflying.util.XmlParser;
 import com.dji.mapkit.core.maps.DJIMap;
 import com.dji.mapkit.core.models.DJILatLng;
 import dji.common.error.DJIError;

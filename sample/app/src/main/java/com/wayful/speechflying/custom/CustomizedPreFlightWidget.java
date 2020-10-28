@@ -1,4 +1,4 @@
-package com.dji.sdk.sample.demo.custom;
+package com.wayful.speechflying.custom;
 
 import android.content.Context;
 import android.graphics.Canvas;

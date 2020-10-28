@@ -1,4 +1,4 @@
-package com.dji.sdk.sample.demo.util;
+package com.wayful.speechflying.util;
 
 import android.content.Context;
 import android.preference.EditTextPreference;
