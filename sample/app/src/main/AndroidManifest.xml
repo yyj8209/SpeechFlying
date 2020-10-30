@@ -91,12 +91,6 @@
             android:screenOrientation="sensorLandscape"
             android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
         <activity
-            android:name=".CustomizedWidgetsActivity"
-            android:label="Customized Widgets"
-            android:launchMode = "singleTop"
-            android:screenOrientation="sensorLandscape"
-            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
-        <activity
             android:name=".MapWidgetActivity"
             android:label="Map Widget"
             android:launchMode = "singleTop"
